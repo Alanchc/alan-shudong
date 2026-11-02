@@ -33,7 +33,7 @@ export default function EntryPage() {
     if (!window.confirm("删除后无法恢复，确定删除这篇日记吗？")) return;
     try {
       await deleteEntry(entry.id);
-      router.push("/");
+      router.push("/diary");
     } catch (err) {
       setError(err instanceof Error ? err.message : "删除失败");
     }
@@ -63,14 +63,14 @@ export default function EntryPage() {
   return (
     <div className="entry-page">
       <div className="entry-bar">
-        <Link href="/" className="icon-btn" aria-label="返回列表">
+        <Link href="/diary" className="icon-btn" aria-label="返回列表">
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8">
             <path d="M15 6l-6 6 6 6" />
           </svg>
         </Link>
         <span className="entry-bar-title">日记</span>
         {entry && (
-          <Link href={`/write?id=${entry.id}`} className="primary-btn" style={{ marginLeft: "auto" }}>
+          <Link href={`/diary/write?id=${entry.id}`} className="primary-btn" style={{ marginLeft: "auto" }}>
             编辑
           </Link>
         )}
@@ -82,8 +82,8 @@ export default function EntryPage() {
         <div className="empty">
           <div style={{ textAlign: "center" }}>
             <div style={{ marginBottom: 10 }}>{error}</div>
-            <Link href="/" className="link-btn" style={{ color: "var(--brand)" }}>
-              返回首页
+            <Link href="/diary" className="link-btn" style={{ color: "var(--brand)" }}>
+              返回日记列表
             </Link>
           </div>
         </div>
@@ -111,7 +111,7 @@ export default function EntryPage() {
           </div>
 
           <div className="reader-foot" style={{ flexWrap: "wrap" }}>
-            <Link className="link-btn" href={`/write?id=${entry.id}`}>
+            <Link className="link-btn" href={`/diary/write?id=${entry.id}`}>
               编辑
             </Link>
             <span>·</span>

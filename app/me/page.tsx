@@ -30,6 +30,9 @@ export default function MePage() {
         <div className="me-head">
           <span className="logo">树</span>
           <span className="brand-name">{SITE_NAME}</span>
+          <Link href="/" className="link-btn" style={{ marginLeft: "auto", fontSize: 11 }}>
+            返回首页
+          </Link>
         </div>
 
         {session ? (

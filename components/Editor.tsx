@@ -196,7 +196,7 @@ export default function Editor({ entryId }: { entryId: string | null }) {
       if (entryId) await updateEntry(entryId, input);
       else await createEntry(input);
       localStorage.removeItem(draftKey);
-      router.push("/");
+      router.push("/diary");
     } catch (err) {
       setError(err instanceof Error ? err.message : "保存失败");
       setSaving(false);
@@ -227,7 +227,7 @@ export default function Editor({ entryId }: { entryId: string | null }) {
   return (
     <div className="editor-shell">
       <div className="topbar">
-        <Link href="/" className="icon-btn" aria-label="返回列表">
+        <Link href="/diary" className="icon-btn" aria-label="返回列表">
           <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8">
             <path d="M15 6l-6 6 6 6" />
           </svg>

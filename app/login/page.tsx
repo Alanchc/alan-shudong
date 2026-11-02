@@ -51,7 +51,7 @@ export default function LoginPage() {
           password,
         });
         if (signInError) throw signInError;
-        router.push("/");
+        router.push("/diary");
       } else {
         const { data, error: signUpError } = await supabase.auth.signUp({
           email: email.trim(),
@@ -59,7 +59,7 @@ export default function LoginPage() {
         });
         if (signUpError) throw signUpError;
         if (data.session) {
-          router.push("/");
+          router.push("/diary");
         } else {
           setMessage("注册成功，请到邮箱点击确认链接后再登录");
         }

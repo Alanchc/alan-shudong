@@ -1238,3 +1238,115 @@ select {
     padding: calc(16px + env(safe-area-inset-top)) 16px 88px;
   }
 }
+
+/* ---------- 门户入口 ---------- */
+.portal {
+  min-height: 100dvh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 48px 20px;
+}
+
+.portal-inner {
+  width: 100%;
+  max-width: 560px;
+}
+
+.portal-brand {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  margin-bottom: 30px;
+}
+
+.portal-title {
+  font-size: 26px;
+  font-weight: 600;
+  letter-spacing: -0.01em;
+}
+
+.portal-desc {
+  margin-top: 4px;
+  font-size: 13px;
+  color: var(--muted);
+}
+
+.module-grid {
+  display: grid;
+  gap: 12px;
+}
+
+.module-card {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 16px 18px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-card);
+  background: var(--surface);
+  transition: border-color 0.18s ease, transform 0.18s ease;
+}
+
+.module-card:hover {
+  border-color: var(--brand);
+  transform: translateY(-1px);
+}
+
+.module-icon {
+  display: inline-flex;
+  color: var(--brand);
+}
+
+.module-body {
+  flex: 1;
+  min-width: 0;
+}
+
+.module-name {
+  font-size: 15px;
+  font-weight: 600;
+}
+
+.module-desc {
+  margin-top: 3px;
+  font-size: 12px;
+  line-height: 1.55;
+  color: var(--muted);
+}
+
+.module-arrow {
+  font-size: 14px;
+  color: var(--muted);
+}
+
+.module-card-off {
+  opacity: 0.55;
+  border-style: dashed;
+  cursor: default;
+}
+
+.module-card-off:hover {
+  border-color: var(--border);
+  transform: none;
+}
+
+.portal-foot {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 28px;
+  font-size: 11.5px;
+  color: var(--muted);
+}
+
+@media (max-width: 900px) {
+  .portal {
+    padding: calc(40px + env(safe-area-inset-top)) 18px 40px;
+    align-items: flex-start;
+  }
+
+  .portal-title {
+    font-size: 23px;
+  }
+}

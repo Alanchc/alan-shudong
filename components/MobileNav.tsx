@@ -15,7 +15,17 @@ const ITEMS = [
     ),
   },
   {
-    href: "/write",
+    href: "/diary",
+    label: "日记",
+    icon: (
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7">
+        <rect x="4" y="3" width="16" height="18" rx="2" />
+        <path d="M8 7h8M8 11h8M8 15h5" />
+      </svg>
+    ),
+  },
+  {
+    href: "/diary/write",
     label: "写日记",
     icon: (
       <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7">
@@ -41,7 +51,9 @@ export default function MobileNav() {
   return (
     <nav className="mobile-nav">
       {ITEMS.map((item) => {
-        const active = pathname === item.href;
+        const active =
+          pathname === item.href ||
+          (item.href === "/diary" && pathname.startsWith("/diary/"));
         return (
           <Link key={item.href} href={item.href} className={active ? "on" : undefined}>
             {item.icon}
