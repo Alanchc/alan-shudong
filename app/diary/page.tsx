@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import Markdown from "react-markdown";
 import remarkGfm from "remark-gfm";
+import Heatmap from "@/components/Heatmap";
 import MobileNav from "@/components/MobileNav";
 import ThemeToggle from "@/components/ThemeToggle";
 import { deleteEntry, listEntries, setShare } from "@/lib/entries";
@@ -127,6 +128,8 @@ export default function Home() {
             ＋ 新建
           </Link>
         </div>
+
+        {!loading && entries.length > 0 && <Heatmap entries={entries} />}
 
         <div className="search-box">
           <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8">
