@@ -128,6 +128,18 @@ export async function deleteEntry(id: string): Promise<void> {
   if (error) throw error;
 }
 
+export async function listPublicEntries(userId: string): Promise<Entry[]> {
+  const { data, error } = await supabase
+    .from("entries")
+    .select(COLUMNS)
+    .eq("user_id", userId)
+    .eq("is_public", true)
+    .not("share_slug", "is", null)
+    .order("entry_date", { ascending: false });
+  if (error) throw error;
+  return (data as Row[]).map(toEntry);
+}
+
 export async function getPublicEntry(slug: string): Promise<Entry | null> {
   const { data, error } = await supabase
     .from("entries")
