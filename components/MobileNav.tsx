@@ -1,0 +1,54 @@
+"use client";
+
+import Link from "next/link";
+import { usePathname } from "next/navigation";
+
+const ITEMS = [
+  {
+    href: "/",
+    label: "首页",
+    icon: (
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7">
+        <path d="M3 10.5L12 3l9 7.5" />
+        <path d="M5 9.5V21h14V9.5" />
+      </svg>
+    ),
+  },
+  {
+    href: "/write",
+    label: "写日记",
+    icon: (
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7">
+        <path d="M12 5v14M5 12h14" />
+      </svg>
+    ),
+  },
+  {
+    href: "/me",
+    label: "我的",
+    icon: (
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7">
+        <circle cx="12" cy="8" r="4" />
+        <path d="M4.5 20a7.5 7.5 0 0115 0" />
+      </svg>
+    ),
+  },
+];
+
+export default function MobileNav() {
+  const pathname = usePathname();
+
+  return (
+    <nav className="mobile-nav">
+      {ITEMS.map((item) => {
+        const active = pathname === item.href;
+        return (
+          <Link key={item.href} href={item.href} className={active ? "on" : undefined}>
+            {item.icon}
+            {item.label}
+          </Link>
+        );
+      })}
+    </nav>
+  );
+}

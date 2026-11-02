@@ -8,6 +8,7 @@ import remarkGfm from "remark-gfm";
 import { createEntry, getEntry, updateEntry } from "@/lib/entries";
 import { SITE_NAME } from "@/lib/site";
 import { MOODS, type Mood } from "@/lib/types";
+import { useIsMobile } from "@/lib/useIsMobile";
 import { useSession } from "@/lib/useSession";
 
 function today(): string {
@@ -17,7 +18,9 @@ function today(): string {
 export default function Editor({ entryId }: { entryId: string | null }) {
   const router = useRouter();
   const session = useSession();
+  const isMobile = useIsMobile();
 
+  const [mobileView, setMobileView] = useState<"edit" | "preview">("edit");
   const [title, setTitle] = useState("");
   const [content, setContent] = useState("");
   const [date, setDate] = useState(today());
@@ -202,6 +205,24 @@ export default function Editor({ entryId }: { entryId: string | null }) {
           aria-label="标签"
         />
         <span className="spacer" />
+        {isMobile && (
+          <div className="view-switch">
+            <button
+              type="button"
+              className={mobileView === "edit" ? "on" : ""}
+              onClick={() => setMobileView("edit")}
+            >
+              编辑
+            </button>
+            <button
+              type="button"
+              className={mobileView === "preview" ? "on" : ""}
+              onClick={() => setMobileView("preview")}
+            >
+              预览
+            </button>
+          </div>
+        )}
         <span className="save-state">
           {dirty ? "编辑中…" : savedAt ? `草稿 ${savedAt}` : "未保存"}
         </span>
@@ -222,7 +243,7 @@ export default function Editor({ entryId }: { entryId: string | null }) {
         </div>
       )}
 
-      <div className="editor-split">
+      <div className={mobileView === "preview" ? "editor-split show-preview" : "editor-split"}>
         <div className="pane">
           <div className="toolbar">
             <button type="button" onClick={() => wrap("# ", "")}>

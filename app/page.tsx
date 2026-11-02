@@ -1,19 +1,24 @@
 "use client";
 
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import Markdown from "react-markdown";
 import remarkGfm from "remark-gfm";
+import MobileNav from "@/components/MobileNav";
 import ThemeToggle from "@/components/ThemeToggle";
 import { deleteEntry, listEntries, setShare } from "@/lib/entries";
 import { excerpt, formatDate, formatMonth, formatTime, MOOD_COLOR } from "@/lib/format";
 import { SITE_NAME } from "@/lib/site";
 import { supabase } from "@/lib/supabase";
 import type { Entry } from "@/lib/types";
+import { useIsMobile } from "@/lib/useIsMobile";
 import { useSession } from "@/lib/useSession";
 
 export default function Home() {
   const session = useSession();
+  const router = useRouter();
+  const isMobile = useIsMobile();
   const [entries, setEntries] = useState<Entry[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -163,7 +168,9 @@ export default function Home() {
                   key={entry.id}
                   type="button"
                   className={entry.id === selected?.id ? "list-item active" : "list-item"}
-                  onClick={() => setSelectedId(entry.id)}
+                  onClick={() =>
+                    isMobile ? router.push(`/entry/${entry.id}`) : setSelectedId(entry.id)
+                  }
                 >
                   <div className="item-top">
                     <span>
@@ -303,6 +310,8 @@ export default function Home() {
           <div className="empty">还没有日记，点右上角「新建」写下第一篇。</div>
         )}
       </main>
+
+      <MobileNav />
     </div>
   );
 }
