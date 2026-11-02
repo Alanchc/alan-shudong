@@ -160,6 +160,14 @@ export default function Home() {
         </div>
 
         <div className="list-scroll">
+          {loading && (
+            <div className="skeleton-list">
+              <div className="skeleton" />
+              <div className="skeleton" />
+              <div className="skeleton" />
+            </div>
+          )}
+
           {groups.map((group) => (
             <div key={group.month}>
               <div className="group-label">{group.month}</div>
@@ -187,9 +195,14 @@ export default function Home() {
               ))}
             </div>
           ))}
-          {!loading && session && filtered.length === 0 && (
+          {!loading && session && entries.length === 0 && (
             <div className="group-label" style={{ padding: "20px 6px" }}>
               还没有日记，点「新建」写下第一篇
+            </div>
+          )}
+          {!loading && entries.length > 0 && filtered.length === 0 && (
+            <div className="group-label" style={{ padding: "20px 6px" }}>
+              没有匹配的日记，换个关键词或标签试试
             </div>
           )}
         </div>
