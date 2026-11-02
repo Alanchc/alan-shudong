@@ -43,6 +43,9 @@ insert into storage.buckets (id, name, public)
 values ('avatars', 'avatars', true)
 on conflict (id) do nothing;
 
+-- 桶已存在但为私有时，这里确保它是公开的
+update storage.buckets set public = true where id = 'avatars';
+
 drop policy if exists "avatars public read" on storage.objects;
 drop policy if exists "avatars insert own" on storage.objects;
 drop policy if exists "avatars update own" on storage.objects;

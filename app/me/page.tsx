@@ -5,6 +5,7 @@ import { useEffect, useRef, useState } from "react";
 import MobileNav from "@/components/MobileNav";
 import ThemeToggle from "@/components/ThemeToggle";
 import { listEntries } from "@/lib/entries";
+import { errorMessage } from "@/lib/errors";
 import {
   getMyProfile,
   normalizeUsername,
@@ -50,7 +51,7 @@ export default function MePage() {
         setBio(found.bio ?? "");
         setAvatarUrl(found.avatarUrl);
       })
-      .catch(() => setError("资料加载失败"));
+      .catch((err) => setError(errorMessage(err, "资料加载失败")));
   }, [session]);
 
   async function handleAvatar(file: File) {
@@ -61,7 +62,7 @@ export default function MePage() {
       setAvatarUrl(url);
       setNotice("头像已上传，记得点保存");
     } catch (err) {
-      setError(err instanceof Error ? err.message : "头像上传失败");
+      setError(errorMessage(err, "头像上传失败"));
     } finally {
       setUploading(false);
     }
@@ -77,7 +78,7 @@ export default function MePage() {
       setUsername(saved.username);
       setNotice("已保存");
     } catch (err) {
-      setError(err instanceof Error ? err.message : "保存失败");
+      setError(errorMessage(err, "保存失败"));
     } finally {
       setSaving(false);
     }

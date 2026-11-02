@@ -97,6 +97,9 @@ export async function saveProfile(input: ProfileInput): Promise<Profile> {
 }
 
 export async function uploadAvatar(file: File): Promise<string> {
+  if (!file.type.startsWith("image/")) throw new Error("只能上传图片文件");
+  if (file.size > 5 * 1024 * 1024) throw new Error("头像不能超过 5MB");
+
   const { data: userData, error: userError } = await supabase.auth.getUser();
   if (userError || !userData.user) throw new Error("请先登录");
 
