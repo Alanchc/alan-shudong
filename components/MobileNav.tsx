@@ -34,6 +34,17 @@ const ITEMS = [
     ),
   },
   {
+    href: "/friends",
+    label: "好友",
+    icon: (
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7">
+        <circle cx="9" cy="8" r="3.4" />
+        <path d="M2.8 19a6.2 6.2 0 0112.4 0" />
+        <path d="M16 5.4a3.4 3.4 0 010 6.4M17.5 13.4a6.2 6.2 0 013.7 5.6" />
+      </svg>
+    ),
+  },
+  {
     href: "/me",
     label: "我的",
     icon: (

@@ -14,9 +14,21 @@ const MODULES = [
     ),
   },
   {
+    href: "/friends",
+    name: "好友",
+    desc: "按用户名加好友，同意申请后即可查看好友的主页与动态。",
+    icon: (
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6">
+        <circle cx="9" cy="8" r="3.4" />
+        <path d="M2.8 19a6.2 6.2 0 0112.4 0" />
+        <path d="M16 5.4a3.4 3.4 0 010 6.4M17.5 13.4a6.2 6.2 0 013.7 5.6" />
+      </svg>
+    ),
+  },
+  {
     href: "/me",
     name: "我的",
-    desc: "账号信息、日记统计与主题设置。",
+    desc: "用户名、头像、简介，以及日记统计与主题设置。",
     icon: (
       <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6">
         <circle cx="12" cy="8" r="4" />

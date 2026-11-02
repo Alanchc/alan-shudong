@@ -5,17 +5,29 @@ import { useParams } from "next/navigation";
 import { useEffect, useState } from "react";
 import { listPublicEntries } from "@/lib/entries";
 import { excerpt, formatDate, MOOD_COLOR } from "@/lib/format";
+import {
+  acceptRequest,
+  getRelationWith,
+  sendFriendRequest,
+  type Relation,
+} from "@/lib/friends";
 import { getProfileByUsername, type Profile } from "@/lib/profiles";
 import type { Entry } from "@/lib/types";
+import { useSession } from "@/lib/useSession";
 
 export default function ProfilePage() {
   const params = useParams<{ username: string }>();
   const username = Array.isArray(params.username) ? params.username[0] : params.username;
+  const session = useSession();
 
   const [profile, setProfile] = useState<Profile | null>(null);
   const [entries, setEntries] = useState<Entry[]>([]);
   const [loading, setLoading] = useState(true);
   const [notFound, setNotFound] = useState(false);
+  const [relation, setRelation] = useState<Relation | null>(null);
+  const [relationReady, setRelationReady] = useState(false);
+  const [busy, setBusy] = useState(false);
+  const [actionError, setActionError] = useState<string | null>(null);
 
   useEffect(() => {
     if (!username) return;
@@ -40,6 +52,51 @@ export default function ProfilePage() {
       alive = false;
     };
   }, [username]);
+
+  useEffect(() => {
+    if (!profile || session === undefined) return;
+    if (!session || session.user.id === profile.id) {
+      setRelation(null);
+      setRelationReady(true);
+      return;
+    }
+    let alive = true;
+    getRelationWith(profile.id)
+      .then((found) => alive && setRelation(found))
+      .catch(() => alive && setRelation(null))
+      .finally(() => alive && setRelationReady(true));
+    return () => {
+      alive = false;
+    };
+  }, [profile, session]);
+
+  async function handleAddFriend() {
+    if (!profile) return;
+    setBusy(true);
+    setActionError(null);
+    try {
+      await sendFriendRequest(profile.id);
+      setRelation(await getRelationWith(profile.id));
+    } catch (err) {
+      setActionError(err instanceof Error ? err.message : "操作失败");
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  async function handleAccept() {
+    if (!relation || !profile) return;
+    setBusy(true);
+    setActionError(null);
+    try {
+      await acceptRequest(relation.id);
+      setRelation(await getRelationWith(profile.id));
+    } catch (err) {
+      setActionError(err instanceof Error ? err.message : "操作失败");
+    } finally {
+      setBusy(false);
+    }
+  }
 
   if (loading) {
     return (
@@ -84,7 +141,32 @@ export default function ProfilePage() {
             <div className="profile-username">@{profile.username}</div>
             {profile.bio && <div className="profile-bio">{profile.bio}</div>}
           </div>
+          <div className="profile-action">
+            {session && profile.id === session.user.id ? (
+              <Link href="/me" className="btn-sm btn-ghost">
+                编辑资料
+              </Link>
+            ) : !session ? (
+              <Link href="/login" className="btn-sm">
+                登录后加好友
+              </Link>
+            ) : relationReady && relation?.direction === "friend" ? (
+              <span className="friend-tag">已是好友</span>
+            ) : relationReady && relation?.direction === "outgoing" ? (
+              <span className="friend-tag">等待验证</span>
+            ) : relationReady && relation?.direction === "incoming" ? (
+              <button type="button" className="btn-sm" disabled={busy} onClick={handleAccept}>
+                {busy ? "处理中…" : "同意好友申请"}
+              </button>
+            ) : relationReady ? (
+              <button type="button" className="btn-sm" disabled={busy} onClick={handleAddFriend}>
+                {busy ? "发送中…" : "加好友"}
+              </button>
+            ) : null}
+          </div>
         </div>
+
+        {actionError && <div className="form-error" style={{ marginBottom: 16 }}>{actionError}</div>}
 
         <div className="profile-section">
           <div className="profile-section-title">
