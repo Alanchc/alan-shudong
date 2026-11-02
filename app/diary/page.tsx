@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import Markdown from "react-markdown";
 import remarkGfm from "remark-gfm";
-import Heatmap from "@/components/Heatmap";
+import MonthCalendar from "@/components/MonthCalendar";
 import MobileNav from "@/components/MobileNav";
 import ThemeToggle from "@/components/ThemeToggle";
 import { deleteEntry, listEntries, setShare } from "@/lib/entries";
@@ -25,6 +25,7 @@ export default function Home() {
   const [error, setError] = useState<string | null>(null);
   const [query, setQuery] = useState("");
   const [activeTag, setActiveTag] = useState<string | null>(null);
+  const [pickedDate, setPickedDate] = useState<string | null>(null);
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [copied, setCopied] = useState(false);
 
@@ -61,13 +62,14 @@ export default function Home() {
     const keyword = query.trim().toLowerCase();
     return entries
       .filter((entry) => (activeTag ? entry.tags.includes(activeTag) : true))
+      .filter((entry) => (pickedDate ? entry.entryDate === pickedDate : true))
       .filter((entry) =>
         keyword
           ? (entry.title + entry.contentMd).toLowerCase().includes(keyword)
           : true,
       )
       .sort((a, b) => b.createdAt.localeCompare(a.createdAt));
-  }, [entries, query, activeTag]);
+  }, [entries, query, activeTag, pickedDate]);
 
   const groups = useMemo(() => {
     const result: { month: string; items: Entry[] }[] = [];
@@ -129,7 +131,9 @@ export default function Home() {
           </Link>
         </div>
 
-        {!loading && entries.length > 0 && <Heatmap entries={entries} />}
+        {!loading && entries.length > 0 && (
+          <MonthCalendar entries={entries} picked={pickedDate} onPick={setPickedDate} />
+        )}
 
         <div className="search-box">
           <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8">
@@ -152,6 +156,15 @@ export default function Home() {
           >
             全部
           </button>
+          {pickedDate && (
+            <button
+              type="button"
+              className="chip active"
+              onClick={() => setPickedDate(null)}
+            >
+              {pickedDate} ✕
+            </button>
+          )}
           {allTags.map((tag) => (
             <button
               key={tag}
