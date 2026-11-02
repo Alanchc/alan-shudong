@@ -430,8 +430,11 @@ select {
 }
 
 .prose img {
+  display: block;
   max-width: 100%;
+  height: auto;
   border-radius: var(--radius);
+  margin: 14px 0;
 }
 
 .reader-foot {

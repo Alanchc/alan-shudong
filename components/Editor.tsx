@@ -1,11 +1,12 @@
 "use client";
 
 import Link from "next/link";
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState, type ChangeEvent } from "react";
 import { useRouter } from "next/navigation";
 import Markdown from "react-markdown";
 import remarkGfm from "remark-gfm";
 import { createEntry, getEntry, updateEntry } from "@/lib/entries";
+import { supabase } from "@/lib/supabase";
 import { SITE_NAME } from "@/lib/site";
 import { MOODS, type Mood } from "@/lib/types";
 import { useIsMobile } from "@/lib/useIsMobile";
@@ -31,7 +32,9 @@ export default function Editor({ entryId }: { entryId: string | null }) {
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [ready, setReady] = useState(entryId === null);
+  const [uploading, setUploading] = useState(false);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
+  const fileRef = useRef<HTMLInputElement>(null);
   const draftKey = `diary:draft:${entryId ?? "new"}`;
 
   useEffect(() => {
@@ -122,6 +125,57 @@ export default function Editor({ entryId }: { entryId: string | null }) {
       start + prefix.length,
       end + next.length,
     );
+  }
+
+  function insertAtCursor(text: string) {
+    const el = textareaRef.current;
+    const start = el?.selectionStart ?? content.length;
+    const end = el?.selectionEnd ?? content.length;
+    setContent(content.slice(0, start) + text + content.slice(end));
+    requestAnimationFrame(() => {
+      const target = textareaRef.current;
+      if (!target) return;
+      target.focus();
+      const caret = start + text.length;
+      target.setSelectionRange(caret, caret);
+    });
+  }
+
+  async function handlePickImages(event: ChangeEvent<HTMLInputElement>) {
+    const files = Array.from(event.target.files ?? []);
+    event.target.value = "";
+    if (files.length === 0) return;
+
+    setUploading(true);
+    setError(null);
+    try {
+      const { data: userData, error: userError } = await supabase.auth.getUser();
+      if (userError || !userData.user) throw new Error("登录状态已失效，请重新登录");
+
+      const snippets: string[] = [];
+      for (const file of files) {
+        if (!file.type.startsWith("image/")) {
+          throw new Error(`${file.name} 不是图片文件`);
+        }
+        if (file.size > 5 * 1024 * 1024) {
+          throw new Error(`${file.name} 超过 5MB`);
+        }
+        const ext = file.name.split(".").pop()?.toLowerCase() || "png";
+        const path = `${userData.user.id}/${crypto.randomUUID()}.${ext}`;
+        const { error: uploadError } = await supabase.storage
+          .from("entry-images")
+          .upload(path, file, { cacheControl: "31536000", contentType: file.type });
+        if (uploadError) throw uploadError;
+
+        const { data } = supabase.storage.from("entry-images").getPublicUrl(path);
+        snippets.push(`\n![图片](${data.publicUrl})\n`);
+      }
+      insertAtCursor(snippets.join(""));
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "图片上传失败");
+    } finally {
+      setUploading(false);
+    }
   }
 
   async function handleSave() {
@@ -269,6 +323,23 @@ export default function Editor({ entryId }: { entryId: string | null }) {
             <button type="button" onClick={() => wrap("`", "`")}>
               代码
             </button>
+            <span className="divider" />
+            <button
+              type="button"
+              onClick={() => fileRef.current?.click()}
+              disabled={uploading}
+              style={{ opacity: uploading ? 0.6 : 1 }}
+            >
+              {uploading ? "上传中…" : "图片"}
+            </button>
+            <input
+              ref={fileRef}
+              type="file"
+              accept="image/png,image/jpeg,image/webp,image/gif"
+              multiple
+              hidden
+              onChange={handlePickImages}
+            />
           </div>
           <input
             value={title}
