@@ -5,6 +5,7 @@ import { useParams } from "next/navigation";
 import { useEffect, useState } from "react";
 import Markdown from "react-markdown";
 import remarkGfm from "remark-gfm";
+import HomeLink from "@/components/HomeLink";
 import { listUserEntries } from "@/lib/entries";
 import { excerpt, formatDate, MOOD_COLOR } from "@/lib/format";
 import {
@@ -115,11 +116,11 @@ export default function ProfilePage() {
     return (
       <div className="profile-page">
         <div className="profile-inner">
+          <div className="page-nav">
+            <HomeLink />
+          </div>
           <div className="profile-empty">
             没有找到 @{username} 这个用户
-            <Link href="/" className="link-btn" style={{ marginTop: 12 }}>
-              返回首页
-            </Link>
           </div>
         </div>
       </div>
@@ -132,6 +133,9 @@ export default function ProfilePage() {
   return (
     <div className="profile-page">
       <div className="profile-inner">
+        <div className="page-nav">
+          <HomeLink />
+        </div>
         <div className="profile-head">
           {profile.avatarUrl ? (
             // eslint-disable-next-line @next/next/no-img-element

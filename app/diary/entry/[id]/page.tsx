@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { useParams, useRouter } from "next/navigation";
+import HomeLink from "@/components/HomeLink";
 import { useEffect, useState } from "react";
 import Markdown from "react-markdown";
 import remarkGfm from "remark-gfm";
@@ -69,8 +70,9 @@ export default function EntryPage() {
           </svg>
         </Link>
         <span className="entry-bar-title">日记</span>
+        <HomeLink style={{ marginLeft: "auto" }} />
         {entry && (
-          <Link href={`/diary/write?id=${entry.id}`} className="primary-btn" style={{ marginLeft: "auto" }}>
+          <Link href={`/diary/write?id=${entry.id}`} className="primary-btn">
             编辑
           </Link>
         )}

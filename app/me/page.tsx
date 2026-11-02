@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import HomeLink from "@/components/HomeLink";
 import { useEffect, useRef, useState } from "react";
 import MobileNav from "@/components/MobileNav";
 import ThemeToggle from "@/components/ThemeToggle";
@@ -92,9 +93,7 @@ export default function MePage() {
         <div className="me-head">
           <span className="logo">树</span>
           <span className="brand-name">{SITE_NAME}</span>
-          <Link href="/" className="link-btn" style={{ marginLeft: "auto", fontSize: 11 }}>
-            返回首页
-          </Link>
+          <HomeLink style={{ marginLeft: "auto" }} />
         </div>
 
         {session ? (

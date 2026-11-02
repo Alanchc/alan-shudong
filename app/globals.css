@@ -2132,14 +2132,57 @@ a.friend-name:hover {
 }
 
 /* ---------- 可见性 ---------- */
+select {
+  color-scheme: inherit;
+}
+
+select option {
+  background: var(--surface);
+  color: var(--text);
+}
+
 .visibility-select {
   height: 26px;
   padding: 0 8px;
   border: 1px solid var(--border);
   border-radius: 999px;
-  background: transparent;
+  background: var(--surface-2);
   color: var(--text);
   font-size: 11px;
+}
+
+/* ---------- 返回首页 ---------- */
+.home-link {
+  display: inline-flex;
+  flex: none;
+  align-items: center;
+  gap: 4px;
+  padding: 4px 10px;
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  background: var(--surface-2);
+  color: var(--muted);
+  font-size: 11px;
+  line-height: 1.4;
+  text-decoration: none;
+  transition: color 0.15s ease, border-color 0.15s ease;
+}
+
+.home-link:hover {
+  color: var(--brand);
+  border-color: var(--brand);
+}
+
+.page-nav {
+  display: flex;
+  margin-bottom: 12px;
+}
+
+.share-kicker {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
 }
 
 .profile-entry-head {

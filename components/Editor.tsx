@@ -5,6 +5,7 @@ import { useEffect, useRef, useState, type ChangeEvent } from "react";
 import { useRouter } from "next/navigation";
 import Markdown from "react-markdown";
 import remarkGfm from "remark-gfm";
+import HomeLink from "@/components/HomeLink";
 import { createEntry, getEntry, updateEntry } from "@/lib/entries";
 import { supabase } from "@/lib/supabase";
 import { SITE_NAME } from "@/lib/site";
@@ -237,6 +238,7 @@ export default function Editor({ entryId }: { entryId: string | null }) {
             <path d="M15 6l-6 6 6 6" />
           </svg>
         </Link>
+        <HomeLink />
         <input
           type="date"
           className="date-input"

@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { useParams } from "next/navigation";
 import Markdown from "react-markdown";
 import remarkGfm from "remark-gfm";
+import HomeLink from "@/components/HomeLink";
 import { getPublicEntry } from "@/lib/entries";
 import { formatDate } from "@/lib/format";
 import { AUTHOR_NAME, SITE_NAME } from "@/lib/site";
@@ -39,7 +40,10 @@ export default function SharePage() {
     return (
       <div className="share-page">
         <div className="share-card">
-          <div className="share-kicker">{SITE_NAME} · 分享</div>
+          <div className="share-kicker">
+            <span>{SITE_NAME} · 分享</span>
+            <HomeLink />
+          </div>
           <h1 style={{ fontSize: 20 }}>
             {state === "error" ? "加载失败，请稍后重试" : "这篇分享不存在或已关闭"}
           </h1>
@@ -55,7 +59,10 @@ export default function SharePage() {
   return (
     <div className="share-page">
       <article className="share-card">
-        <div className="share-kicker">{SITE_NAME} · 分享</div>
+        <div className="share-kicker">
+          <span>{SITE_NAME} · 分享</span>
+          <HomeLink />
+        </div>
         <h1>{entry.title || "无标题"}</h1>
         <div className="share-who">
           <span className="avatar">{AUTHOR_NAME.slice(0, 1)}</span>

@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import HomeLink from "@/components/HomeLink";
 import { useParams } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
 import UserAvatar, { personName } from "@/components/UserAvatar";
@@ -214,6 +215,7 @@ export default function ChatRoomPage() {
             返回
           </Link>
           <div className="chat-head-name">@{friend.username}</div>
+          <HomeLink style={{ marginLeft: "auto" }} />
         </div>
         <div className="chat-body">
           <div className="profile-empty">
@@ -237,6 +239,7 @@ export default function ChatRoomPage() {
           <UserAvatar person={friend} size={30} />
           <span>{personName(friend)}</span>
         </Link>
+        <HomeLink style={{ marginLeft: "auto" }} />
       </div>
 
       <div className="chat-body">

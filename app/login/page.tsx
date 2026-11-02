@@ -1,6 +1,6 @@
 "use client";
 
-import Link from "next/link";
+import HomeLink from "@/components/HomeLink";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { SITE_NAME } from "@/lib/site";
@@ -78,9 +78,7 @@ export default function LoginPage() {
         <div className="auth-brand">
           <span className="logo">树</span>
           <h1>{SITE_NAME}</h1>
-          <Link href="/" className="link-btn" style={{ marginLeft: "auto", fontSize: 11 }}>
-            返回首页
-          </Link>
+          <HomeLink style={{ marginLeft: "auto" }} />
         </div>
 
         <div className="tabs">

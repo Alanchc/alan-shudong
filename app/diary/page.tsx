@@ -6,6 +6,7 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 import Markdown from "react-markdown";
 import remarkGfm from "remark-gfm";
 import MonthCalendar from "@/components/MonthCalendar";
+import HomeLink from "@/components/HomeLink";
 import MobileNav from "@/components/MobileNav";
 import ThemeToggle from "@/components/ThemeToggle";
 import { deleteEntry, listEntries, setVisibility } from "@/lib/entries";
@@ -127,6 +128,7 @@ export default function Home() {
             树
           </Link>
           <span className="brand-name">{SITE_NAME}</span>
+          <HomeLink />
           <Link href="/diary/write" className="new-btn">
             ＋ 新建
           </Link>
