@@ -14,6 +14,17 @@ const MODULES = [
     ),
   },
   {
+    href: "/chat",
+    name: "消息",
+    desc: "和好友一对一聊天，未读提醒，发出去的消息可撤回。",
+    icon: (
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6">
+        <path d="M4 5.5h16v11h-9l-4.5 3.5v-3.5H4z" />
+        <path d="M8 9.5h8M8 12.5h5" />
+      </svg>
+    ),
+  },
+  {
     href: "/friends",
     name: "好友",
     desc: "按用户名加好友，同意申请后即可查看好友的主页与动态。",

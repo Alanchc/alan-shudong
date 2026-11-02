@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useCallback, useEffect, useState } from "react";
 import MobileNav from "@/components/MobileNav";
+import UserAvatar, { personName } from "@/components/UserAvatar";
 import {
   acceptRequest,
   listRelations,
@@ -14,23 +15,6 @@ import {
 } from "@/lib/friends";
 import { SITE_NAME } from "@/lib/site";
 import { useSession } from "@/lib/useSession";
-
-function displayName(person: FriendProfile) {
-  return person.nickname || person.username;
-}
-
-function Avatar({ person, size }: { person: FriendProfile; size?: number }) {
-  const style = size ? { width: size, height: size, fontSize: size / 2.4 } : undefined;
-  if (person.avatarUrl) {
-    // eslint-disable-next-line @next/next/no-img-element
-    return <img className="avatar" src={person.avatarUrl} alt={displayName(person)} style={style} />;
-  }
-  return (
-    <div className="avatar avatar-fallback" style={style}>
-      {displayName(person).slice(0, 1).toUpperCase()}
-    </div>
-  );
-}
 
 export default function FriendsPage() {
   const session = useSession();
@@ -140,9 +124,9 @@ export default function FriendsPage() {
                       const key = `search-${person.id}`;
                       return (
                         <div key={person.id} className="friend-row">
-                          <Avatar person={person} size={38} />
+                          <UserAvatar person={person} size={38} />
                           <div className="friend-meta">
-                            <div className="friend-name">{displayName(person)}</div>
+                            <div className="friend-name">{personName(person)}</div>
                             <div className="friend-sub">@{person.username}</div>
                           </div>
                           {!relation ? (
@@ -197,9 +181,9 @@ export default function FriendsPage() {
               ) : (
                 incoming.map((relation) => (
                   <div key={relation.id} className="friend-row">
-                    <Avatar person={relation.other} size={38} />
+                    <UserAvatar person={relation.other} size={38} />
                     <div className="friend-meta">
-                      <div className="friend-name">{displayName(relation.other)}</div>
+                      <div className="friend-name">{personName(relation.other)}</div>
                       <div className="friend-sub">@{relation.other.username} 想加你为好友</div>
                     </div>
                     <div className="friend-actions">
@@ -238,15 +222,18 @@ export default function FriendsPage() {
               ) : (
                 friends.map((relation) => (
                   <div key={relation.id} className="friend-row">
-                    <Avatar person={relation.other} size={38} />
+                    <UserAvatar person={relation.other} size={38} />
                     <div className="friend-meta">
                       <Link href={`/u/${relation.other.username}`} className="friend-name">
-                        {displayName(relation.other)}
+                        {personName(relation.other)}
                       </Link>
                       <div className="friend-sub">@{relation.other.username}</div>
                     </div>
                     <Link href={`/u/${relation.other.username}`} className="link-btn friend-link">
                       主页
+                    </Link>
+                    <Link href={`/chat/${relation.other.username}`} className="btn-sm">
+                      消息
                     </Link>
                     <button
                       type="button"
@@ -268,9 +255,9 @@ export default function FriendsPage() {
                 <div className="friends-section-title">已发出的申请</div>
                 {outgoing.map((relation) => (
                   <div key={relation.id} className="friend-row">
-                    <Avatar person={relation.other} size={38} />
+                    <UserAvatar person={relation.other} size={38} />
                     <div className="friend-meta">
-                      <div className="friend-name">{displayName(relation.other)}</div>
+                      <div className="friend-name">{personName(relation.other)}</div>
                       <div className="friend-sub">@{relation.other.username} · 等待对方同意</div>
                     </div>
                     <button

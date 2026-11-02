@@ -151,7 +151,9 @@ export default function ProfilePage() {
                 登录后加好友
               </Link>
             ) : relationReady && relation?.direction === "friend" ? (
-              <span className="friend-tag">已是好友</span>
+              <Link href={`/chat/${profile.username}`} className="btn-sm">
+                发消息
+              </Link>
             ) : relationReady && relation?.direction === "outgoing" ? (
               <span className="friend-tag">等待验证</span>
             ) : relationReady && relation?.direction === "incoming" ? (

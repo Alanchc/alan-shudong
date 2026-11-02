@@ -2,6 +2,9 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import { useEffect, useState } from "react";
+import { subscribeMessages, unreadCount } from "@/lib/chat";
+import { useSession } from "@/lib/useSession";
 
 const ITEMS = [
   {
@@ -25,11 +28,12 @@ const ITEMS = [
     ),
   },
   {
-    href: "/diary/write",
-    label: "写日记",
+    href: "/chat",
+    label: "消息",
     icon: (
       <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7">
-        <path d="M12 5v14M5 12h14" />
+        <path d="M4 5.5h16v11h-9l-4.5 3.5v-3.5H4z" />
+        <path d="M8 9.5h8M8 12.5h5" />
       </svg>
     ),
   },
@@ -58,16 +62,43 @@ const ITEMS = [
 
 export default function MobileNav() {
   const pathname = usePathname();
+  const session = useSession();
+  const [unread, setUnread] = useState(0);
+
+  useEffect(() => {
+    if (!session) {
+      setUnread(0);
+      return;
+    }
+    let alive = true;
+    const load = () => {
+      unreadCount()
+        .then((count) => alive && setUnread(count))
+        .catch(() => {});
+    };
+    load();
+    const off = subscribeMessages(() => load());
+    return () => {
+      alive = false;
+      off();
+    };
+  }, [session]);
 
   return (
     <nav className="mobile-nav">
       {ITEMS.map((item) => {
         const active =
           pathname === item.href ||
-          (item.href === "/diary" && pathname.startsWith("/diary/"));
+          (item.href === "/diary" && pathname.startsWith("/diary/")) ||
+          (item.href === "/chat" && pathname.startsWith("/chat/"));
         return (
           <Link key={item.href} href={item.href} className={active ? "on" : undefined}>
-            {item.icon}
+            <span className="nav-icon">
+              {item.icon}
+              {item.href === "/chat" && unread > 0 && (
+                <span className="nav-badge">{unread > 99 ? "99+" : unread}</span>
+              )}
+            </span>
             {item.label}
           </Link>
         );
