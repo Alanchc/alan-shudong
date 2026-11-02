@@ -8,7 +8,7 @@ import remarkGfm from "remark-gfm";
 import { createEntry, getEntry, updateEntry } from "@/lib/entries";
 import { supabase } from "@/lib/supabase";
 import { SITE_NAME } from "@/lib/site";
-import { MOODS, type Mood } from "@/lib/types";
+import { MOODS, VISIBILITIES, type Mood, type Visibility } from "@/lib/types";
 import { useIsMobile } from "@/lib/useIsMobile";
 import { useSession } from "@/lib/useSession";
 
@@ -26,6 +26,7 @@ export default function Editor({ entryId }: { entryId: string | null }) {
   const [content, setContent] = useState("");
   const [date, setDate] = useState(today());
   const [mood, setMood] = useState<Mood>("平静");
+  const [visibility, setVisibility] = useState<Visibility>("private");
   const [tags, setTags] = useState("");
   const [savedAt, setSavedAt] = useState<string | null>(null);
   const [dirty, setDirty] = useState(false);
@@ -47,12 +48,14 @@ export default function Editor({ entryId }: { entryId: string | null }) {
         date?: string;
         mood?: Mood;
         tags?: string;
+        visibility?: Visibility;
       };
       if (draft.title !== undefined) setTitle(draft.title);
       if (draft.content !== undefined) setContent(draft.content);
       if (draft.date !== undefined) setDate(draft.date);
       if (draft.mood !== undefined) setMood(draft.mood);
       if (draft.tags !== undefined) setTags(draft.tags);
+      if (draft.visibility !== undefined) setVisibility(draft.visibility);
     } catch {
       // 草稿损坏时忽略
     }
@@ -71,6 +74,7 @@ export default function Editor({ entryId }: { entryId: string | null }) {
         setDate(entry.entryDate);
         setMood(entry.mood);
         setTags(entry.tags.join("，"));
+        setVisibility(entry.visibility);
         setReady(true);
       })
       .catch((err) => setError(err instanceof Error ? err.message : "加载失败"));
@@ -80,12 +84,12 @@ export default function Editor({ entryId }: { entryId: string | null }) {
     if (!ready) return;
     setDirty(true);
     const timer = setTimeout(() => {
-      localStorage.setItem(draftKey, JSON.stringify({ title, content, date, mood, tags }));
+      localStorage.setItem(draftKey, JSON.stringify({ title, content, date, mood, tags, visibility }));
       setSavedAt(new Date().toTimeString().slice(0, 5));
       setDirty(false);
     }, 1500);
     return () => clearTimeout(timer);
-  }, [title, content, date, mood, tags, draftKey, ready]);
+  }, [title, content, date, mood, tags, visibility, draftKey, ready]);
 
   function applyChange(next: string, start: number, end: number) {
     setContent(next);
@@ -191,6 +195,7 @@ export default function Editor({ entryId }: { entryId: string | null }) {
       entryDate: date,
       mood,
       tags: tags.split(/[，,]/).map((tag) => tag.trim()).filter(Boolean),
+      visibility,
     };
     try {
       if (entryId) await updateEntry(entryId, input);
@@ -248,6 +253,18 @@ export default function Editor({ entryId }: { entryId: string | null }) {
           {MOODS.map((item) => (
             <option key={item} value={item}>
               {item}
+            </option>
+          ))}
+        </select>
+        <select
+          className="visibility-select"
+          value={visibility}
+          onChange={(event) => setVisibility(event.target.value as Visibility)}
+          aria-label="可见范围"
+        >
+          {VISIBILITIES.map((item) => (
+            <option key={item.value} value={item.value}>
+              {item.label}
             </option>
           ))}
         </select>

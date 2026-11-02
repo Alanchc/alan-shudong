@@ -6,9 +6,9 @@ import { useEffect, useState } from "react";
 import Markdown from "react-markdown";
 import remarkGfm from "remark-gfm";
 import MobileNav from "@/components/MobileNav";
-import { deleteEntry, getEntry, setShare } from "@/lib/entries";
+import { deleteEntry, getEntry, setVisibility } from "@/lib/entries";
 import { formatDate, formatTime, MOOD_COLOR } from "@/lib/format";
-import type { Entry } from "@/lib/types";
+import { VISIBILITIES, type Entry, type Visibility } from "@/lib/types";
 
 export default function EntryPage() {
   const { id } = useParams<{ id: string }>();
@@ -39,14 +39,14 @@ export default function EntryPage() {
     }
   }
 
-  async function handleShare() {
-    if (!entry) return;
+  async function handleVisibility(next: Visibility) {
+    if (!entry || entry.visibility === next) return;
     try {
-      const updated = await setShare(entry.id, !entry.isPublic);
+      const updated = await setVisibility(entry.id, next);
       setEntry(updated);
       setCopied(false);
     } catch (err) {
-      setError(err instanceof Error ? err.message : "分享设置失败");
+      setError(err instanceof Error ? err.message : "可见范围设置失败");
     }
   }
 
@@ -102,7 +102,11 @@ export default function EntryPage() {
               </span>
             ))}
             <span className="private-note">
-              {entry.isPublic ? "已开启分享" : "仅自己可见"}
+              {entry.visibility === "public"
+                ? "公开可见"
+                : entry.visibility === "friends"
+                  ? "仅好友可见"
+                  : "仅自己可见"}
             </span>
           </div>
 
@@ -115,9 +119,18 @@ export default function EntryPage() {
               编辑
             </Link>
             <span>·</span>
-            <button type="button" className="link-btn" onClick={handleShare}>
-              {entry.isPublic ? "关闭分享" : "分享"}
-            </button>
+            <select
+              className="visibility-select"
+              value={entry.visibility}
+              onChange={(event) => handleVisibility(event.target.value as Visibility)}
+              aria-label="可见范围"
+            >
+              {VISIBILITIES.map((item) => (
+                <option key={item.value} value={item.value}>
+                  {item.label}
+                </option>
+              ))}
+            </select>
             <span>·</span>
             <button type="button" className="link-btn danger" onClick={handleDelete}>
               删除

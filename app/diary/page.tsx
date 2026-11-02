@@ -8,11 +8,11 @@ import remarkGfm from "remark-gfm";
 import MonthCalendar from "@/components/MonthCalendar";
 import MobileNav from "@/components/MobileNav";
 import ThemeToggle from "@/components/ThemeToggle";
-import { deleteEntry, listEntries, setShare } from "@/lib/entries";
+import { deleteEntry, listEntries, setVisibility } from "@/lib/entries";
 import { excerpt, formatDate, formatMonth, formatTime, MOOD_COLOR } from "@/lib/format";
 import { SITE_NAME } from "@/lib/site";
 import { supabase } from "@/lib/supabase";
-import type { Entry } from "@/lib/types";
+import { VISIBILITIES, type Entry, type Visibility } from "@/lib/types";
 import { useIsMobile } from "@/lib/useIsMobile";
 import { useSession } from "@/lib/useSession";
 
@@ -96,15 +96,16 @@ export default function Home() {
     }
   }
 
-  async function handleShare(entry: Entry) {
+  async function handleVisibility(entry: Entry, next: Visibility) {
+    if (entry.visibility === next) return;
     try {
-      const updated = await setShare(entry.id, !entry.isPublic);
+      const updated = await setVisibility(entry.id, next);
       setEntries((prev) =>
         prev.map((item) => (item.id === updated.id ? updated : item)),
       );
       setCopied(false);
     } catch (err) {
-      setError(err instanceof Error ? err.message : "分享设置失败");
+      setError(err instanceof Error ? err.message : "可见范围设置失败");
     }
   }
 
@@ -288,13 +289,22 @@ export default function Home() {
                 </span>
               ))}
               <span className="private-note">
-                {selected.isPublic ? (
+                {selected.visibility === "public" ? (
                   <>
                     <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8">
                       <circle cx="12" cy="12" r="9" />
                       <path d="M2 12h20M12 3a15 15 0 010 18M12 3a15 15 0 000 18" />
                     </svg>
-                    已开启分享
+                    公开可见
+                  </>
+                ) : selected.visibility === "friends" ? (
+                  <>
+                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8">
+                      <circle cx="9" cy="8" r="3.2" />
+                      <path d="M3 19a6 6 0 0112 0" />
+                      <path d="M16 5.5a3.2 3.2 0 010 6M17.5 13.5a6 6 0 013.5 5.5" />
+                    </svg>
+                    仅好友可见
                   </>
                 ) : (
                   <>
@@ -317,14 +327,25 @@ export default function Home() {
                 编辑
               </Link>
               <span>·</span>
-              <button type="button" className="link-btn" onClick={() => handleShare(selected)}>
-                {selected.isPublic ? "关闭分享" : "分享"}
-              </button>
+              <select
+                className="visibility-select"
+                value={selected.visibility}
+                onChange={(event) =>
+                  handleVisibility(selected, event.target.value as Visibility)
+                }
+                aria-label="可见范围"
+              >
+                {VISIBILITIES.map((item) => (
+                  <option key={item.value} value={item.value}>
+                    {item.label}
+                  </option>
+                ))}
+              </select>
               <span>·</span>
               <button type="button" className="link-btn danger" onClick={() => handleDelete(selected.id)}>
                 删除
               </button>
-              {selected.isPublic && selected.shareSlug && (
+              {selected.visibility === "public" && selected.shareSlug && (
                 <span className="share-hint">
                   /s/{selected.shareSlug} ·{" "}
                   <button type="button" className="link-btn" onClick={() => copyLink(selected.shareSlug!)}>
@@ -332,7 +353,7 @@ export default function Home() {
                   </button>
                 </span>
               )}
-              <span style={{ marginLeft: selected.isPublic ? 0 : "auto" }}>
+              <span style={{ marginLeft: selected.visibility === "public" ? 0 : "auto" }}>
                 写于 {formatTime(selected.createdAt)} · 更新于 {formatTime(selected.updatedAt)}
               </span>
             </div>

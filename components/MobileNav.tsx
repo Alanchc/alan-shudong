@@ -28,6 +28,17 @@ const ITEMS = [
     ),
   },
   {
+    href: "/feed",
+    label: "动态",
+    icon: (
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7">
+        <circle cx="12" cy="12" r="8.5" />
+        <path d="M12 7.5v5l3 2" />
+        <path d="M4.5 12h2M17.5 12h2" />
+      </svg>
+    ),
+  },
+  {
     href: "/chat",
     label: "消息",
     icon: (
@@ -90,6 +101,7 @@ export default function MobileNav() {
         const active =
           pathname === item.href ||
           (item.href === "/diary" && pathname.startsWith("/diary/")) ||
+          (item.href === "/feed" && pathname.startsWith("/feed/")) ||
           (item.href === "/chat" && pathname.startsWith("/chat/"));
         return (
           <Link key={item.href} href={item.href} className={active ? "on" : undefined}>

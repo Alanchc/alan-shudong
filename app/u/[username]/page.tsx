@@ -3,7 +3,9 @@
 import Link from "next/link";
 import { useParams } from "next/navigation";
 import { useEffect, useState } from "react";
-import { listPublicEntries } from "@/lib/entries";
+import Markdown from "react-markdown";
+import remarkGfm from "remark-gfm";
+import { listUserEntries } from "@/lib/entries";
 import { excerpt, formatDate, MOOD_COLOR } from "@/lib/format";
 import {
   acceptRequest,
@@ -28,6 +30,7 @@ export default function ProfilePage() {
   const [relationReady, setRelationReady] = useState(false);
   const [busy, setBusy] = useState(false);
   const [actionError, setActionError] = useState<string | null>(null);
+  const [expanded, setExpanded] = useState<string | null>(null);
 
   useEffect(() => {
     if (!username) return;
@@ -42,7 +45,7 @@ export default function ProfilePage() {
           return;
         }
         setProfile(found);
-        const list = await listPublicEntries(found.id);
+        const list = await listUserEntries(found.id);
         if (alive) setEntries(list);
       })
       .catch(() => alive && setNotFound(true))
@@ -172,27 +175,56 @@ export default function ProfilePage() {
 
         <div className="profile-section">
           <div className="profile-section-title">
-            公开日记 <span>{entries.length}</span>
+            日记 <span>{entries.length}</span>
           </div>
 
           {entries.length === 0 ? (
-            <div className="profile-empty">还没有公开的日记</div>
+            <div className="profile-empty">
+              {relation?.direction === "friend" || session?.user.id === profile.id
+                ? "还没有写过日记"
+                : "还没有公开的日记"}
+            </div>
           ) : (
             <div className="profile-list">
-              {entries.map((entry) => (
-                <Link key={entry.id} href={`/s/${entry.shareSlug}`} className="profile-entry">
-                  <div className="profile-entry-top">
-                    <span className="profile-entry-date">{formatDate(entry.entryDate)}</span>
-                    <span
-                      className="mood-dot"
-                      style={{ background: MOOD_COLOR[entry.mood] }}
-                      title={entry.mood}
-                    />
+              {entries.map((entry) => {
+                const open = expanded === entry.id;
+                return (
+                  <div key={entry.id} className="profile-entry">
+                    <button
+                      type="button"
+                      className="profile-entry-head"
+                      onClick={() => setExpanded(open ? null : entry.id)}
+                    >
+                      <span className="profile-entry-date">{formatDate(entry.entryDate)}</span>
+                      <span className={`profile-vis ${entry.visibility}`}>
+                        {entry.visibility === "public"
+                          ? "公开"
+                          : entry.visibility === "friends"
+                            ? "仅好友"
+                            : "私密"}
+                      </span>
+                      <span
+                        className="mood-dot"
+                        style={{ background: MOOD_COLOR[entry.mood] }}
+                        title={entry.mood}
+                      />
+                    </button>
+                    <div className="profile-entry-title">{entry.title || "无标题"}</div>
+                    {open ? (
+                      <div className="prose profile-entry-body">
+                        <Markdown remarkPlugins={[remarkGfm]}>{entry.contentMd}</Markdown>
+                      </div>
+                    ) : (
+                      <div className="profile-entry-excerpt">{excerpt(entry.contentMd)}</div>
+                    )}
+                    {entry.visibility === "public" && entry.shareSlug && (
+                      <Link href={`/s/${entry.shareSlug}`} className="link-btn profile-entry-link">
+                        分享页 →
+                      </Link>
+                    )}
                   </div>
-                  <div className="profile-entry-title">{entry.title || "无标题"}</div>
-                  <div className="profile-entry-excerpt">{excerpt(entry.contentMd)}</div>
-                </Link>
-              ))}
+                );
+              })}
             </div>
           )}
         </div>

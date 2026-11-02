@@ -14,6 +14,18 @@ const MODULES = [
     ),
   },
   {
+    href: "/feed",
+    name: "动态",
+    desc: "看看好友最近写了什么，公开和仅好友可见的日记都会出现在这里。",
+    icon: (
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6">
+        <circle cx="12" cy="12" r="8.5" />
+        <path d="M12 7.5v5l3 2" />
+        <path d="M4.5 12h2M17.5 12h2" />
+      </svg>
+    ),
+  },
+  {
     href: "/chat",
     name: "消息",
     desc: "和好友一对一聊天，未读提醒，发出去的消息可撤回。",

@@ -1,5 +1,5 @@
 import { supabase } from "./supabase";
-import type { Entry, Mood } from "./types";
+import type { Entry, Mood, Visibility } from "./types";
 
 type Row = {
   id: string;
@@ -9,6 +9,7 @@ type Row = {
   entry_date: string;
   mood: Mood;
   tags: string[] | null;
+  visibility: Visibility;
   is_public: boolean;
   share_slug: string | null;
   created_at: string;
@@ -16,7 +17,7 @@ type Row = {
 };
 
 const COLUMNS =
-  "id,user_id,title,content_md,entry_date,mood,tags,is_public,share_slug,created_at,updated_at";
+  "id,user_id,title,content_md,entry_date,mood,tags,visibility,is_public,share_slug,created_at,updated_at";
 
 function toEntry(row: Row): Entry {
   return {
@@ -26,11 +27,16 @@ function toEntry(row: Row): Entry {
     entryDate: row.entry_date,
     mood: row.mood,
     tags: row.tags ?? [],
+    visibility: row.visibility,
     isPublic: row.is_public,
     shareSlug: row.share_slug,
     createdAt: row.created_at,
     updatedAt: row.updated_at,
   };
+}
+
+function makeSlug(): string {
+  return Math.random().toString(36).slice(2, 10) + Math.random().toString(36).slice(2, 6);
 }
 
 export interface EntryInput {
@@ -39,6 +45,7 @@ export interface EntryInput {
   entryDate: string;
   mood: Mood;
   tags: string[];
+  visibility: Visibility;
 }
 
 export async function listEntries(): Promise<Entry[]> {
@@ -77,6 +84,8 @@ export async function createEntry(input: EntryInput): Promise<Entry> {
       entry_date: input.entryDate,
       mood: input.mood,
       tags: input.tags,
+      visibility: input.visibility,
+      share_slug: input.visibility === "public" ? makeSlug() : null,
     })
     .select(COLUMNS)
     .single();
@@ -96,26 +105,43 @@ export async function updateEntry(
       entry_date: input.entryDate,
       mood: input.mood,
       tags: input.tags,
+      visibility: input.visibility,
     })
     .eq("id", id)
     .select(COLUMNS)
     .single();
   if (error) throw error;
-  return toEntry(data as Row);
+
+  let entry = toEntry(data as Row);
+  if (entry.visibility === "public" && !entry.shareSlug) {
+    const { data: updated, error: slugError } = await supabase
+      .from("entries")
+      .update({ share_slug: makeSlug() })
+      .eq("id", id)
+      .select(COLUMNS)
+      .single();
+    if (slugError) throw slugError;
+    entry = toEntry(updated as Row);
+  }
+  return entry;
 }
 
-export async function setShare(
+export async function setVisibility(
   id: string,
-  isPublic: boolean,
+  visibility: Visibility,
 ): Promise<Entry> {
-  const slug = isPublic
-    ? Math.random().toString(36).slice(2, 10) +
-      Math.random().toString(36).slice(2, 6)
-    : null;
+  const { data: current, error: readError } = await supabase
+    .from("entries")
+    .select("share_slug")
+    .eq("id", id)
+    .maybeSingle();
+  if (readError) throw readError;
+
+  const slug = current?.share_slug ?? (visibility === "public" ? makeSlug() : null);
 
   const { data, error } = await supabase
     .from("entries")
-    .update({ is_public: isPublic, share_slug: slug })
+    .update({ visibility, share_slug: slug })
     .eq("id", id)
     .select(COLUMNS)
     .single();
@@ -128,14 +154,13 @@ export async function deleteEntry(id: string): Promise<void> {
   if (error) throw error;
 }
 
-export async function listPublicEntries(userId: string): Promise<Entry[]> {
+export async function listUserEntries(userId: string, limit = 50): Promise<Entry[]> {
   const { data, error } = await supabase
     .from("entries")
     .select(COLUMNS)
     .eq("user_id", userId)
-    .eq("is_public", true)
-    .not("share_slug", "is", null)
-    .order("entry_date", { ascending: false });
+    .order("entry_date", { ascending: false })
+    .limit(limit);
   if (error) throw error;
   return (data as Row[]).map(toEntry);
 }

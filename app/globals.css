@@ -2131,4 +2131,137 @@ a.friend-name:hover {
   text-align: center;
 }
 
+/* ---------- 可见性 ---------- */
+.visibility-select {
+  height: 26px;
+  padding: 0 8px;
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  background: transparent;
+  color: var(--text);
+  font-size: 11px;
+}
+
+.profile-entry-head {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+  padding: 0;
+  border: 0;
+  background: none;
+  color: inherit;
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+
+.profile-entry-head .mood-dot {
+  margin-left: auto;
+}
+
+.profile-vis {
+  flex: none;
+  padding: 1px 6px;
+  border-radius: 999px;
+  font-size: 10px;
+  line-height: 1.6;
+}
+
+.profile-vis.public {
+  background: rgba(47, 133, 90, 0.12);
+  color: #2f855a;
+}
+
+.profile-vis.friends {
+  background: rgba(197, 138, 50, 0.14);
+  color: #b7791f;
+}
+
+.profile-vis.private {
+  background: rgba(120, 120, 120, 0.14);
+  color: var(--muted);
+}
+
+.profile-entry-body {
+  margin-top: 8px;
+}
+
+.profile-entry-link {
+  display: inline-block;
+  margin-top: 8px;
+  font-size: 11px;
+  color: var(--brand);
+}
+
+/* ---------- 好友动态 ---------- */
+.feed-card {
+  padding: 14px;
+  margin-bottom: 10px;
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  background: var(--surface);
+}
+
+.feed-head {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.feed-author {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.feed-date {
+  margin-left: auto;
+  font-size: 10.5px;
+  color: var(--muted);
+}
+
+.feed-title {
+  margin: 10px 0 6px;
+  font-size: 15px;
+  font-weight: 600;
+}
+
+.feed-meta {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px;
+  margin-bottom: 8px;
+}
+
+.feed-excerpt {
+  display: -webkit-box;
+  overflow: hidden;
+  font-size: 12.5px;
+  line-height: 1.65;
+  color: var(--muted);
+  -webkit-line-clamp: 3;
+  -webkit-box-orient: vertical;
+}
+
+.feed-body {
+  margin-top: 8px;
+}
+
+.feed-foot {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  margin-top: 10px;
+}
+
+.feed-foot .link-btn {
+  font-size: 11px;
+  color: var(--brand);
+}
+
+
 
