@@ -42,9 +42,13 @@ export interface EntryInput {
 }
 
 export async function listEntries(): Promise<Entry[]> {
+  const { data: userData } = await supabase.auth.getUser();
+  if (!userData.user) return [];
+
   const { data, error } = await supabase
     .from("entries")
     .select(COLUMNS)
+    .eq("user_id", userData.user.id)
     .order("created_at", { ascending: false });
   if (error) throw error;
   return (data as Row[]).map(toEntry);
