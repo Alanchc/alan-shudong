@@ -6,6 +6,7 @@ import { useRouter } from "next/navigation";
 import Markdown from "react-markdown";
 import remarkGfm from "remark-gfm";
 import HomeLink from "@/components/HomeLink";
+import { currentUserId } from "@/lib/auth";
 import { createEntry, getEntry, updateEntry } from "@/lib/entries";
 import { supabase } from "@/lib/supabase";
 import { SITE_NAME } from "@/lib/site";
@@ -154,8 +155,8 @@ export default function Editor({ entryId }: { entryId: string | null }) {
     setUploading(true);
     setError(null);
     try {
-      const { data: userData, error: userError } = await supabase.auth.getUser();
-      if (userError || !userData.user) throw new Error("登录状态已失效，请重新登录");
+      const me = await currentUserId();
+      if (!me) throw new Error("登录状态已失效，请重新登录");
 
       const snippets: string[] = [];
       for (const file of files) {
@@ -166,7 +167,7 @@ export default function Editor({ entryId }: { entryId: string | null }) {
           throw new Error(`${file.name} 超过 5MB`);
         }
         const ext = file.name.split(".").pop()?.toLowerCase() || "png";
-        const path = `${userData.user.id}/${crypto.randomUUID()}.${ext}`;
+        const path = `${me}/${crypto.randomUUID()}.${ext}`;
         const { error: uploadError } = await supabase.storage
           .from("entry-images")
           .upload(path, file, { cacheControl: "31536000", contentType: file.type });

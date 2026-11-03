@@ -1,4 +1,4 @@
-import { listUserEntries } from "./entries";
+import { listEntriesByUsers } from "./entries";
 import { listRelations, type FriendProfile } from "./friends";
 import type { Entry } from "./types";
 
@@ -12,17 +12,22 @@ export async function listFeed(limit = 60): Promise<FeedItem[]> {
   const friends = relations.filter((relation) => relation.direction === "friend");
   if (friends.length === 0) return [];
 
-  const lists = await Promise.all(
-    friends.map(async (friend) => {
-      const entries = await listUserEntries(friend.other.id, 20);
-      return entries
-        .filter((entry) => entry.visibility !== "private")
-        .map((entry) => ({ entry, author: friend.other }));
-    }),
+  const entries = await listEntriesByUsers(friends.map((friend) => friend.other.id), 240);
+
+  const byAuthor = new Map<string, Entry[]>();
+  entries.forEach((entry) => {
+    const list = byAuthor.get(entry.userId) ?? [];
+    list.push(entry);
+    byAuthor.set(entry.userId, list);
+  });
+
+  const items: FeedItem[] = friends.flatMap((friend) =>
+    (byAuthor.get(friend.other.id) ?? [])
+      .slice(0, 20)
+      .map((entry) => ({ entry, author: friend.other })),
   );
 
-  return lists
-    .flat()
+  return items
     .sort((a, b) => {
       const byDate = b.entry.entryDate.localeCompare(a.entry.entryDate);
       if (byDate !== 0) return byDate;

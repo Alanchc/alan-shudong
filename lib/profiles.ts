@@ -1,4 +1,5 @@
 import { supabase } from "./supabase";
+import { currentUserId, requireUserId } from "./auth";
 
 type Row = {
   id: string;
@@ -36,13 +37,13 @@ export function normalizeUsername(value: string) {
 }
 
 export async function getMyProfile(): Promise<Profile | null> {
-  const { data: userData } = await supabase.auth.getUser();
-  if (!userData.user) return null;
+  const id = await currentUserId();
+  if (!id) return null;
 
   const { data, error } = await supabase
     .from("profiles")
     .select(COLUMNS)
-    .eq("id", userData.user.id)
+    .eq("id", id)
     .maybeSingle();
   if (error) throw error;
   return data ? toProfile(data as Row) : null;
@@ -66,8 +67,7 @@ export interface ProfileInput {
 }
 
 export async function saveProfile(input: ProfileInput): Promise<Profile> {
-  const { data: userData, error: userError } = await supabase.auth.getUser();
-  if (userError || !userData.user) throw new Error("请先登录");
+  const id = await requireUserId();
 
   const username = normalizeUsername(input.username);
   if (username.length < 3) throw new Error("用户名至少 3 位，只能用字母、数字、下划线");
@@ -76,7 +76,7 @@ export async function saveProfile(input: ProfileInput): Promise<Profile> {
     .from("profiles")
     .upsert(
       {
-        id: userData.user.id,
+        id,
         username,
         nickname: input.nickname.trim() || null,
         bio: input.bio.trim() || null,
@@ -100,11 +100,10 @@ export async function uploadAvatar(file: File): Promise<string> {
   if (!file.type.startsWith("image/")) throw new Error("只能上传图片文件");
   if (file.size > 5 * 1024 * 1024) throw new Error("头像不能超过 5MB");
 
-  const { data: userData, error: userError } = await supabase.auth.getUser();
-  if (userError || !userData.user) throw new Error("请先登录");
+  const id = await requireUserId();
 
   const ext = file.name.split(".").pop()?.toLowerCase() || "png";
-  const path = `${userData.user.id}/avatar.${ext}`;
+  const path = `${id}/avatar.${ext}`;
 
   const { error } = await supabase.storage
     .from("avatars")

@@ -120,6 +120,33 @@ export default function ChatRoomPage() {
   }, [friend, isFriend, meId]);
 
   useEffect(() => {
+    if (!friend || !isFriend || !meId) return;
+    let alive = true;
+
+    const sync = () => {
+      if (document.visibilityState !== "visible") return;
+      listMessages(friend.id)
+        .then((list) => {
+          if (!alive) return;
+          setMessages(list);
+          if (list.some((item) => item.receiverId === meId && !item.readAt)) {
+            markConversationRead(friend.id).catch(() => {});
+          }
+        })
+        .catch(() => {});
+    };
+
+    const timer = window.setInterval(sync, 6000);
+    document.addEventListener("visibilitychange", sync);
+
+    return () => {
+      alive = false;
+      window.clearInterval(timer);
+      document.removeEventListener("visibilitychange", sync);
+    };
+  }, [friend, isFriend, meId]);
+
+  useEffect(() => {
     bottomRef.current?.scrollIntoView({ block: "end" });
   }, [messages.length]);
 

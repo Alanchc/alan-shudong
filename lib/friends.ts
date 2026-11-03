@@ -1,4 +1,5 @@
 import { supabase } from "./supabase";
+import { requireUserId } from "./auth";
 import { normalizeUsername } from "./profiles";
 
 type ProfileRow = {
@@ -57,12 +58,6 @@ function toRelation(row: FriendshipRow, me: string, other: FriendProfile): Relat
   };
 }
 
-async function requireMe(): Promise<string> {
-  const { data, error } = await supabase.auth.getUser();
-  if (error || !data.user) throw new Error("请先登录");
-  return data.user.id;
-}
-
 async function loadProfiles(ids: string[]): Promise<Map<string, FriendProfile>> {
   if (ids.length === 0) return new Map();
   const { data, error } = await supabase
@@ -79,7 +74,7 @@ export async function searchProfiles(query: string): Promise<FriendProfile[]> {
   const keyword = normalizeUsername(query);
   if (!keyword) return [];
 
-  const me = await requireMe();
+  const me = await requireUserId();
   const { data, error } = await supabase
     .from("profiles")
     .select(PROFILE_COLUMNS)
@@ -92,7 +87,7 @@ export async function searchProfiles(query: string): Promise<FriendProfile[]> {
 }
 
 export async function listRelations(): Promise<Relation[]> {
-  const me = await requireMe();
+  const me = await requireUserId();
   const { data, error } = await supabase
     .from("friendships")
     .select(FRIENDSHIP_COLUMNS)
@@ -120,7 +115,7 @@ export async function listRelations(): Promise<Relation[]> {
 }
 
 export async function getRelationWith(userId: string): Promise<Relation | null> {
-  const me = await requireMe();
+  const me = await requireUserId();
   const { data, error } = await supabase
     .from("friendships")
     .select(FRIENDSHIP_COLUMNS)
@@ -145,7 +140,7 @@ export async function getRelationWith(userId: string): Promise<Relation | null> 
 }
 
 export async function sendFriendRequest(userId: string): Promise<void> {
-  const me = await requireMe();
+  const me = await requireUserId();
   if (me === userId) throw new Error("不能加自己为好友");
 
   const { error } = await supabase.from("friendships").insert({

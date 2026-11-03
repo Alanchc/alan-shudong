@@ -1,4 +1,5 @@
 import { supabase } from "./supabase";
+import { currentUserId, requireUserId } from "./auth";
 import type { Entry, Mood, Visibility } from "./types";
 
 type Row = {
@@ -22,6 +23,7 @@ const COLUMNS =
 function toEntry(row: Row): Entry {
   return {
     id: row.id,
+    userId: row.user_id,
     title: row.title,
     contentMd: row.content_md,
     entryDate: row.entry_date,
@@ -49,13 +51,13 @@ export interface EntryInput {
 }
 
 export async function listEntries(): Promise<Entry[]> {
-  const { data: userData } = await supabase.auth.getUser();
-  if (!userData.user) return [];
+  const me = await currentUserId();
+  if (!me) return [];
 
   const { data, error } = await supabase
     .from("entries")
     .select(COLUMNS)
-    .eq("user_id", userData.user.id)
+    .eq("user_id", me)
     .order("created_at", { ascending: false });
   if (error) throw error;
   return (data as Row[]).map(toEntry);
@@ -72,13 +74,12 @@ export async function getEntry(id: string): Promise<Entry | null> {
 }
 
 export async function createEntry(input: EntryInput): Promise<Entry> {
-  const { data: userData, error: userError } = await supabase.auth.getUser();
-  if (userError || !userData.user) throw new Error("请先登录");
+  const me = await requireUserId();
 
   const { data, error } = await supabase
     .from("entries")
     .insert({
-      user_id: userData.user.id,
+      user_id: me,
       title: input.title,
       content_md: input.contentMd,
       entry_date: input.entryDate,
@@ -159,6 +160,22 @@ export async function listUserEntries(userId: string, limit = 50): Promise<Entry
     .from("entries")
     .select(COLUMNS)
     .eq("user_id", userId)
+    .order("entry_date", { ascending: false })
+    .limit(limit);
+  if (error) throw error;
+  return (data as Row[]).map(toEntry);
+}
+
+export async function listEntriesByUsers(
+  userIds: string[],
+  limit = 200,
+): Promise<Entry[]> {
+  if (userIds.length === 0) return [];
+  const { data, error } = await supabase
+    .from("entries")
+    .select(COLUMNS)
+    .in("user_id", userIds)
+    .in("visibility", ["friends", "public"])
     .order("entry_date", { ascending: false })
     .limit(limit);
   if (error) throw error;

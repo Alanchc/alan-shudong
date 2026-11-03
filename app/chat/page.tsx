@@ -50,9 +50,19 @@ export default function ChatListPage() {
       load();
     });
 
+    const timer = window.setInterval(() => {
+      if (document.visibilityState === "visible") load();
+    }, 12000);
+    const onVisible = () => {
+      if (document.visibilityState === "visible") load();
+    };
+    document.addEventListener("visibilitychange", onVisible);
+
     return () => {
       alive = false;
       off();
+      window.clearInterval(timer);
+      document.removeEventListener("visibilitychange", onVisible);
     };
   }, [session]);
 

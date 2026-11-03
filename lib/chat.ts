@@ -1,4 +1,5 @@
 import { supabase } from "./supabase";
+import { currentUserId, requireUserId } from "./auth";
 import { listRelations, type FriendProfile } from "./friends";
 
 const COLUMNS = "id,sender_id,receiver_id,body,created_at,recalled_at,read_at";
@@ -43,14 +44,8 @@ function toMessage(row: Row): ChatMessage {
   };
 }
 
-async function requireMe(): Promise<string> {
-  const { data, error } = await supabase.auth.getUser();
-  if (error || !data.user) throw new Error("请先登录");
-  return data.user.id;
-}
-
 export async function listMessages(friendId: string, limit = 200): Promise<ChatMessage[]> {
-  const me = await requireMe();
+  const me = await requireUserId();
   const { data, error } = await supabase
     .from("messages")
     .select(COLUMNS)
@@ -64,7 +59,7 @@ export async function listMessages(friendId: string, limit = 200): Promise<ChatM
 }
 
 export async function sendMessage(friendId: string, body: string): Promise<ChatMessage> {
-  const me = await requireMe();
+  const me = await requireUserId();
   const text = body.trim();
   if (!text) throw new Error("消息不能为空");
   if (text.length > 2000) throw new Error("消息太长了，最多 2000 字");
@@ -91,7 +86,7 @@ export async function recallMessage(messageId: string): Promise<ChatMessage> {
 }
 
 export async function markConversationRead(friendId: string): Promise<void> {
-  const me = await requireMe();
+  const me = await requireUserId();
   const { error } = await supabase
     .from("messages")
     .update({ read_at: new Date().toISOString() })
@@ -102,19 +97,19 @@ export async function markConversationRead(friendId: string): Promise<void> {
 }
 
 export async function unreadCount(): Promise<number> {
-  const { data: userData } = await supabase.auth.getUser();
-  if (!userData.user) return 0;
+  const me = await currentUserId();
+  if (!me) return 0;
   const { count, error } = await supabase
     .from("messages")
     .select("id", { count: "exact", head: true })
-    .eq("receiver_id", userData.user.id)
+    .eq("receiver_id", me)
     .is("read_at", null);
   if (error) return 0;
   return count ?? 0;
 }
 
 export async function listConversations(): Promise<Conversation[]> {
-  const me = await requireMe();
+  const me = await requireUserId();
   const [relations, result] = await Promise.all([
     listRelations(),
     supabase

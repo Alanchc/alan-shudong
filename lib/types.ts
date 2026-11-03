@@ -16,6 +16,7 @@ export function visibilityLabel(value: Visibility): string {
 
 export interface Entry {
   id: string;
+  userId: string;
   title: string;
   contentMd: string;
   entryDate: string;
