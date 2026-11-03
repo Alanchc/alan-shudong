@@ -1,10 +1,14 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import "./globals.css";
 import { SITE_DESC, SITE_NAME } from "@/lib/site";
 
 export const metadata: Metadata = {
   title: SITE_NAME,
   description: SITE_DESC,
+};
+
+export const viewport: Viewport = {
+  themeColor: "#6d4aff",
 };
 
 export default function RootLayout({
