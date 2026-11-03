@@ -9,6 +9,9 @@ if (!url || !anonKey) {
   );
 }
 
+export const SUPABASE_URL = url;
+export const SUPABASE_ANON_KEY = anonKey;
+
 export const supabase = createClient(url, anonKey, {
   auth: { persistSession: true, autoRefreshToken: true },
 });

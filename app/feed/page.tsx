@@ -8,6 +8,7 @@ import remarkGfm from "remark-gfm";
 import MobileNav from "@/components/MobileNav";
 import UserAvatar, { personName } from "@/components/UserAvatar";
 import { excerpt, formatDate, MOOD_COLOR } from "@/lib/format";
+import { errorMessage } from "@/lib/errors";
 import { listFeed, type FeedItem } from "@/lib/feed";
 import { setLike } from "@/lib/likes";
 import { SITE_NAME } from "@/lib/site";
@@ -28,7 +29,7 @@ export default function FeedPage() {
     listFeed()
       .then((list) => alive && setItems(list))
       .catch((err) =>
-        alive && setError(err instanceof Error ? err.message : "动态加载失败"),
+        alive && setError(errorMessage(err, "动态加载失败")),
       )
       .finally(() => alive && setLoading(false));
     return () => {
@@ -82,7 +83,7 @@ export default function FeedPage() {
             : item,
         ),
       );
-      setError(err instanceof Error ? err.message : "点赞失败，请稍后重试");
+      setError(errorMessage(err, "点赞失败，请稍后重试"));
     } finally {
       setLiking((prev) => prev.filter((id) => id !== entryId));
     }

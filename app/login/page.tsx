@@ -5,19 +5,9 @@ import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { SITE_NAME } from "@/lib/site";
 import { supabase } from "@/lib/supabase";
+import { describeAuthError, diagnoseConnection } from "@/lib/authDiagnostics";
 
 type Mode = "signin" | "signup";
-
-function friendlyError(raw: string): string {
-  if (/Failed to fetch|fetch failed|NetworkError/i.test(raw)) {
-    return "连不上 Supabase，检查网络或代理后再试";
-  }
-  if (/Invalid login credentials/i.test(raw)) return "邮箱或密码不正确";
-  if (/Email not confirmed/i.test(raw)) return "邮箱还没确认，先去邮件里点确认链接";
-  if (/User already registered/i.test(raw)) return "这个邮箱已经注册过了，直接登录吧";
-  if (/Password should be at least/i.test(raw)) return "密码太短，至少 6 位";
-  return raw;
-}
 
 export default function LoginPage() {
   const router = useRouter();
@@ -27,11 +17,13 @@ export default function LoginPage() {
   const [confirm, setConfirm] = useState("");
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [rawError, setRawError] = useState<string | null>(null);
   const [message, setMessage] = useState<string | null>(null);
 
   async function handleSubmit(event: React.FormEvent) {
     event.preventDefault();
     setError(null);
+    setRawError(null);
     setMessage(null);
 
     if (mode === "signup" && password !== confirm) {
@@ -65,8 +57,16 @@ export default function LoginPage() {
         }
       }
     } catch (err) {
-      const raw = err instanceof Error ? err.message : "操作失败";
-      setError(friendlyError(raw));
+      const info = describeAuthError(err);
+      setRawError(info.raw && info.raw !== info.title ? info.raw : null);
+
+      if (info.network) {
+        setError(`${info.title}\n正在诊断网络…`);
+        const detail = await diagnoseConnection();
+        setError(`${info.title}\n${detail}`);
+      } else {
+        setError(info.title);
+      }
     } finally {
       setBusy(false);
     }
@@ -88,6 +88,7 @@ export default function LoginPage() {
             onClick={() => {
               setMode("signin");
               setError(null);
+              setRawError(null);
               setMessage(null);
             }}
           >
@@ -99,6 +100,7 @@ export default function LoginPage() {
             onClick={() => {
               setMode("signup");
               setError(null);
+              setRawError(null);
               setMessage(null);
             }}
           >
@@ -150,7 +152,15 @@ export default function LoginPage() {
           </button>
         </form>
 
-        {error && <div className="notice" style={{ color: "var(--danger)", background: "transparent", border: "1px solid var(--border)" }}>{error}</div>}
+        {error && (
+          <div
+            className="notice error-notice"
+            style={{ color: "var(--danger)", background: "transparent", border: "1px solid var(--border)" }}
+          >
+            {error}
+            {rawError && <div className="error-raw">技术详情：{rawError}</div>}
+          </div>
+        )}
         {message && <div className="notice">{message}</div>}
 
         <div className="auth-hint">

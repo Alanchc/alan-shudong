@@ -757,6 +757,18 @@ select {
   line-height: 1.7;
 }
 
+.error-notice {
+  white-space: pre-line;
+}
+
+.error-raw {
+  margin-top: 6px;
+  font-size: 10.5px;
+  color: var(--muted);
+  word-break: break-word;
+  white-space: normal;
+}
+
 .auth-hint {
   margin-top: 12px;
   font-size: 11px;

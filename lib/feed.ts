@@ -41,8 +41,8 @@ export async function listFeed(limit = 60): Promise<FeedItem[]> {
   let states = new Map<string, { count: number; liked: boolean }>();
   try {
     states = await loadLikeState(page.map((item) => item.entry.id));
-  } catch {
-    // 点赞表尚未创建时，动态列表仍可正常展示
+  } catch (err) {
+    console.warn("点赞数据加载失败：", err);
   }
 
   return page.map((item) => {

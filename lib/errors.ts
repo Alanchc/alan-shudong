@@ -5,11 +5,12 @@ type SupabaseLikeError = {
 };
 
 const CODE_HINTS: Record<string, string> = {
-  "42P01": "数据库表还没创建，请先在 Supabase SQL Editor 执行 supabase/profiles.sql",
-  "42703": "数据库缺少 visibility 字段，请先执行 supabase/visibility.sql",
-  "42501": "没有操作权限，请检查 Supabase 的 RLS 策略",
-  "23505": "这个用户名已经被占用了",
-  "23514": "输入内容不符合格式要求",
+  "42P01": "数据库表还没创建，请先在 Supabase SQL Editor 执行对应的 SQL 脚本",
+  "42703": "数据库缺少字段，请先执行对应的 supabase SQL 脚本（如 visibility.sql）",
+  "42501": "没有操作权限，被 Supabase 的 RLS 策略拦截",
+  "23505": "记录已存在（重复操作或用户名已被占用）",
+  "23514": "输入内容不符合数据库约束",
+  "23503": "关联的数据不存在，请刷新后重试",
 };
 
 export function errorMessage(err: unknown, fallback: string): string {
@@ -18,15 +19,16 @@ export function errorMessage(err: unknown, fallback: string): string {
 
   if (err && typeof err === "object") {
     const value = err as SupabaseLikeError;
-    if (typeof value.code === "string" && CODE_HINTS[value.code]) {
-      return CODE_HINTS[value.code];
+    const raw = typeof value.message === "string" ? value.message : "";
+    const code = typeof value.code === "string" ? value.code : "";
+
+    if (/bucket not found/i.test(raw)) {
+      return "头像存储桶 avatars 不存在，请先执行 supabase/profiles.sql";
     }
-    if (typeof value.message === "string" && value.message) {
-      if (/bucket not found/i.test(value.message)) {
-        return "头像存储桶 avatars 不存在，请先执行 supabase/profiles.sql";
-      }
-      return value.message;
+    if (code && CODE_HINTS[code]) {
+      return raw ? `${CODE_HINTS[code]}｜原始错误：${raw}` : CODE_HINTS[code];
     }
+    if (raw) return raw;
     if (typeof value.error_description === "string" && value.error_description) {
       return value.error_description;
     }
