@@ -3,8 +3,7 @@
 import Link from "next/link";
 import { useParams } from "next/navigation";
 import { useEffect, useState } from "react";
-import Markdown from "react-markdown";
-import remarkGfm from "remark-gfm";
+import MarkdownBody from "@/components/MarkdownBody";
 import HomeLink from "@/components/HomeLink";
 import { listUserEntries } from "@/lib/entries";
 import { excerpt, formatDate, MOOD_COLOR } from "@/lib/format";
@@ -216,7 +215,7 @@ export default function ProfilePage() {
                     <div className="profile-entry-title">{entry.title || "无标题"}</div>
                     {open ? (
                       <div className="prose profile-entry-body">
-                        <Markdown remarkPlugins={[remarkGfm]}>{entry.contentMd}</Markdown>
+                        <MarkdownBody>{entry.contentMd}</MarkdownBody>
                       </div>
                     ) : (
                       <div className="profile-entry-excerpt">{excerpt(entry.contentMd)}</div>

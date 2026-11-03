@@ -3,8 +3,7 @@
 import Link from "next/link";
 import { useEffect, useRef, useState, type ChangeEvent } from "react";
 import { useRouter } from "next/navigation";
-import Markdown from "react-markdown";
-import remarkGfm from "remark-gfm";
+import MarkdownBody from "@/components/MarkdownBody";
 import HomeLink from "@/components/HomeLink";
 import { currentUserId } from "@/lib/auth";
 import { createEntry, getEntry, updateEntry } from "@/lib/entries";
@@ -402,7 +401,7 @@ export default function Editor({ entryId }: { entryId: string | null }) {
             </div>
             <div className="prose">
               {content ? (
-                <Markdown remarkPlugins={[remarkGfm]}>{content}</Markdown>
+                <MarkdownBody>{content}</MarkdownBody>
               ) : (
                 <p style={{ color: "var(--muted)" }}>左边写，这里实时预览。</p>
               )}

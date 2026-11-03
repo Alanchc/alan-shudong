@@ -3,8 +3,7 @@
 import Link from "next/link";
 import HomeLink from "@/components/HomeLink";
 import { useEffect, useState } from "react";
-import Markdown from "react-markdown";
-import remarkGfm from "remark-gfm";
+import MarkdownBody from "@/components/MarkdownBody";
 import MobileNav from "@/components/MobileNav";
 import UserAvatar, { personName } from "@/components/UserAvatar";
 import { excerpt, formatDate, MOOD_COLOR } from "@/lib/format";
@@ -151,7 +150,7 @@ export default function FeedPage() {
 
                       {open ? (
                         <div className="prose feed-body">
-                          <Markdown remarkPlugins={[remarkGfm]}>{entry.contentMd}</Markdown>
+                          <MarkdownBody>{entry.contentMd}</MarkdownBody>
                         </div>
                       ) : (
                         <div className="feed-excerpt">{excerpt(entry.contentMd)}</div>

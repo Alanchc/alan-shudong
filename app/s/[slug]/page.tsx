@@ -2,9 +2,8 @@
 
 import { useEffect, useState } from "react";
 import { useParams } from "next/navigation";
-import Markdown from "react-markdown";
-import remarkGfm from "remark-gfm";
 import HomeLink from "@/components/HomeLink";
+import MarkdownBody from "@/components/MarkdownBody";
 import { getPublicEntry } from "@/lib/entries";
 import { formatDate } from "@/lib/format";
 import { AUTHOR_NAME, SITE_NAME } from "@/lib/site";
@@ -71,7 +70,7 @@ export default function SharePage() {
           <span>{formatDate(entry.entryDate)}</span>
         </div>
         <div className="prose" style={{ fontSize: 15 }}>
-          <Markdown remarkPlugins={[remarkGfm]}>{entry.contentMd}</Markdown>
+          <MarkdownBody>{entry.contentMd}</MarkdownBody>
         </div>
         <div className="share-foot">
           <span>这篇日记由作者公开分享，其余内容不对外可见</span>

@@ -3,8 +3,7 @@
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useCallback, useEffect, useMemo, useState } from "react";
-import Markdown from "react-markdown";
-import remarkGfm from "remark-gfm";
+import MarkdownBody from "@/components/MarkdownBody";
 import MonthCalendar from "@/components/MonthCalendar";
 import HomeLink from "@/components/HomeLink";
 import MobileNav from "@/components/MobileNav";
@@ -321,7 +320,7 @@ export default function Home() {
             </div>
 
             <div className="prose">
-              <Markdown remarkPlugins={[remarkGfm]}>{selected.contentMd}</Markdown>
+              <MarkdownBody>{selected.contentMd}</MarkdownBody>
             </div>
 
             <div className="reader-foot">

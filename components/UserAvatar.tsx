@@ -1,5 +1,7 @@
 "use client";
 
+import { mediaUrl } from "@/lib/supabase";
+
 export type AvatarPerson = {
   username: string;
   nickname: string | null;
@@ -18,9 +20,10 @@ export default function UserAvatar({
   size?: number;
 }) {
   const style = { width: size, height: size, fontSize: Math.round(size / 2.6) };
-  if (person.avatarUrl) {
+  const src = mediaUrl(person.avatarUrl);
+  if (src) {
     // eslint-disable-next-line @next/next/no-img-element
-    return <img className="avatar" src={person.avatarUrl} alt={personName(person)} style={style} />;
+    return <img className="avatar" src={src} alt={personName(person)} style={style} />;
   }
   return (
     <div className="avatar avatar-fallback" style={style}>

@@ -15,7 +15,7 @@ import {
   type Profile,
 } from "@/lib/profiles";
 import { SITE_NAME } from "@/lib/site";
-import { supabase } from "@/lib/supabase";
+import { mediaUrl, supabase } from "@/lib/supabase";
 import { useSession } from "@/lib/useSession";
 
 export default function MePage() {
@@ -86,6 +86,7 @@ export default function MePage() {
   }
 
   const displayName = nickname || username || "我";
+  const avatarSrc = mediaUrl(avatarUrl);
 
   return (
     <div className="me-page">
@@ -100,9 +101,9 @@ export default function MePage() {
           <>
             <div className="me-card me-profile">
               <div className="me-profile-head">
-                {avatarUrl ? (
+                {avatarSrc ? (
                   // eslint-disable-next-line @next/next/no-img-element
-                  <img className="avatar" src={avatarUrl} alt={displayName} />
+                  <img className="avatar" src={avatarSrc} alt={displayName} />
                 ) : (
                   <div className="avatar avatar-fallback">{displayName.slice(0, 1).toUpperCase()}</div>
                 )}

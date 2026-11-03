@@ -138,7 +138,9 @@ export function describeAuthError(err: unknown): AuthErrorInfo {
 
 function hostOf(): string {
   try {
-    return new URL(SUPABASE_URL).host;
+    const parsed = new URL(SUPABASE_URL);
+    const path = parsed.pathname.replace(/\/$/, "");
+    return `${parsed.host}${path}`;
   } catch {
     return SUPABASE_URL;
   }
@@ -162,7 +164,7 @@ export async function diagnoseConnection(): Promise<string> {
   } catch (err) {
     const reason =
       err instanceof Error && err.name === "AbortError" ? "请求超时（8 秒无响应）" : "域名解析或连接失败";
-    return `无法访问 ${host}：${reason}。常见原因是网络/DNS 屏蔽、代理没开、或 NEXT_PUBLIC_SUPABASE_URL 配错。手机上如果用的是移动数据，先连 Wi-Fi 再试——部分运营商网络访问 supabase.co 不稳定。`;
+    return `无法访问 ${host}：${reason}。页面本身能打开但这里失败，通常是 /sb 代理规则还没部署，或当前网络对跨境域名不稳定；手机上可以先连 Wi-Fi 再试。`;
   } finally {
     globalThis.clearTimeout(timer);
   }

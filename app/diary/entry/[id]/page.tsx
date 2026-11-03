@@ -4,9 +4,8 @@ import Link from "next/link";
 import { useParams, useRouter } from "next/navigation";
 import HomeLink from "@/components/HomeLink";
 import { useEffect, useState } from "react";
-import Markdown from "react-markdown";
-import remarkGfm from "remark-gfm";
 import MobileNav from "@/components/MobileNav";
+import MarkdownBody from "@/components/MarkdownBody";
 import { deleteEntry, getEntry, setVisibility } from "@/lib/entries";
 import { formatDate, formatTime, MOOD_COLOR } from "@/lib/format";
 import { VISIBILITIES, type Entry, type Visibility } from "@/lib/types";
@@ -113,7 +112,7 @@ export default function EntryPage() {
           </div>
 
           <div className="prose">
-            <Markdown remarkPlugins={[remarkGfm]}>{entry.contentMd}</Markdown>
+            <MarkdownBody>{entry.contentMd}</MarkdownBody>
           </div>
 
           <div className="reader-foot" style={{ flexWrap: "wrap" }}>
