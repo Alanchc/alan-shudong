@@ -2306,5 +2306,33 @@ select option {
   color: var(--brand);
 }
 
+.like-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  font-size: 11px;
+  color: var(--muted);
+  transition: color 0.15s ease, transform 0.15s ease;
+}
+
+.like-btn:hover {
+  color: var(--brand);
+}
+
+.like-btn.liked {
+  color: var(--danger);
+}
+
+.like-btn:disabled {
+  opacity: 0.55;
+}
+
+.like-btn:active {
+  transform: scale(0.94);
+}
+
 
 

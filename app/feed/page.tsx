@@ -9,6 +9,7 @@ import MobileNav from "@/components/MobileNav";
 import UserAvatar, { personName } from "@/components/UserAvatar";
 import { excerpt, formatDate, MOOD_COLOR } from "@/lib/format";
 import { listFeed, type FeedItem } from "@/lib/feed";
+import { setLike } from "@/lib/likes";
 import { SITE_NAME } from "@/lib/site";
 import { useSession } from "@/lib/useSession";
 
@@ -18,6 +19,7 @@ export default function FeedPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [expanded, setExpanded] = useState<string | null>(null);
+  const [liking, setLiking] = useState<string[]>([]);
 
   useEffect(() => {
     if (!session) return;
@@ -33,6 +35,58 @@ export default function FeedPage() {
       alive = false;
     };
   }, [session]);
+
+  async function handleLike(entryId: string) {
+    if (liking.includes(entryId)) return;
+    const current = items.find((item) => item.entry.id === entryId);
+    if (!current) return;
+    const next = !current.liked;
+
+    setLiking((prev) => [...prev, entryId]);
+    setItems((prev) =>
+      prev.map((item) =>
+        item.entry.id === entryId
+          ? {
+              ...item,
+              liked: next,
+              likeCount: Math.max(0, item.likeCount + (next ? 1 : -1)),
+            }
+          : item,
+      ),
+    );
+
+    try {
+      const result = await setLike(entryId, next);
+      if (result !== next) {
+        setItems((prev) =>
+          prev.map((item) =>
+            item.entry.id === entryId
+              ? {
+                  ...item,
+                  liked: result,
+                  likeCount: Math.max(0, item.likeCount + (result ? 1 : -1)),
+                }
+              : item,
+          ),
+        );
+      }
+    } catch (err) {
+      setItems((prev) =>
+        prev.map((item) =>
+          item.entry.id === entryId
+            ? {
+                ...item,
+                liked: !next,
+                likeCount: Math.max(0, item.likeCount + (next ? -1 : 1)),
+              }
+            : item,
+        ),
+      );
+      setError(err instanceof Error ? err.message : "点赞失败，请稍后重试");
+    } finally {
+      setLiking((prev) => prev.filter((id) => id !== entryId));
+    }
+  }
 
   return (
     <div className="chat-list-page">
@@ -62,7 +116,7 @@ export default function FeedPage() {
                   </Link>
                 </div>
               ) : (
-                items.map(({ entry, author }) => {
+                items.map(({ entry, author, likeCount, liked }) => {
                   const open = expanded === entry.id;
                   return (
                     <article key={entry.id} className="feed-card">
@@ -103,6 +157,26 @@ export default function FeedPage() {
                       )}
 
                       <div className="feed-foot">
+                        <button
+                          type="button"
+                          className={`like-btn${liked ? " liked" : ""}`}
+                          aria-pressed={liked}
+                          aria-label={liked ? "取消点赞" : "点赞"}
+                          disabled={liking.includes(entry.id)}
+                          onClick={() => handleLike(entry.id)}
+                        >
+                          <svg
+                            width="14"
+                            height="14"
+                            viewBox="0 0 24 24"
+                            fill={liked ? "currentColor" : "none"}
+                            stroke="currentColor"
+                            strokeWidth="1.8"
+                          >
+                            <path d="M12 20.2s-7.4-4.6-7.4-9.4a4.2 4.2 0 0 1 7.4-2.8 4.2 4.2 0 0 1 7.4 2.8c0 4.8-7.4 9.4-7.4 9.4z" />
+                          </svg>
+                          <span>{likeCount > 0 ? likeCount : "点赞"}</span>
+                        </button>
                         <button
                           type="button"
                           className="link-btn"
