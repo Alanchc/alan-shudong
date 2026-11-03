@@ -769,6 +769,17 @@ select {
   white-space: normal;
 }
 
+.error-copy {
+  display: inline-block;
+  margin-top: 8px;
+  font-size: 10.5px;
+  color: var(--muted);
+}
+
+.error-copy:hover {
+  color: var(--text);
+}
+
 .auth-hint {
   margin-top: 12px;
   font-size: 11px;

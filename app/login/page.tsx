@@ -2,10 +2,14 @@
 
 import HomeLink from "@/components/HomeLink";
 import { useRouter } from "next/navigation";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { SITE_NAME } from "@/lib/site";
 import { supabase } from "@/lib/supabase";
-import { describeAuthError, diagnoseConnection } from "@/lib/authDiagnostics";
+import {
+  describeAuthError,
+  diagnoseConnection,
+  normalizeEmailInput,
+} from "@/lib/authDiagnostics";
 
 type Mode = "signin" | "signup";
 
@@ -19,12 +23,26 @@ export default function LoginPage() {
   const [error, setError] = useState<string | null>(null);
   const [rawError, setRawError] = useState<string | null>(null);
   const [message, setMessage] = useState<string | null>(null);
+  const [insecure, setInsecure] = useState(false);
+  const [copied, setCopied] = useState(false);
+
+  useEffect(() => {
+    setInsecure(window.location.protocol === "http:");
+  }, []);
 
   async function handleSubmit(event: React.FormEvent) {
     event.preventDefault();
     setError(null);
     setRawError(null);
     setMessage(null);
+    setCopied(false);
+
+    const cleanEmail = normalizeEmailInput(email);
+    if (!cleanEmail) {
+      setError("请填写邮箱");
+      return;
+    }
+    if (cleanEmail !== email) setEmail(cleanEmail);
 
     if (mode === "signup" && password !== confirm) {
       setError("两次输入的密码不一致");
@@ -39,14 +57,14 @@ export default function LoginPage() {
     try {
       if (mode === "signin") {
         const { error: signInError } = await supabase.auth.signInWithPassword({
-          email: email.trim(),
+          email: cleanEmail,
           password,
         });
         if (signInError) throw signInError;
         router.push("/diary");
       } else {
         const { data, error: signUpError } = await supabase.auth.signUp({
-          email: email.trim(),
+          email: cleanEmail,
           password,
         });
         if (signUpError) throw signUpError;
@@ -72,6 +90,20 @@ export default function LoginPage() {
     }
   }
 
+  async function copyError() {
+    const text = [error, rawError ? `技术详情：${rawError}` : ""]
+      .filter(Boolean)
+      .join("\n");
+    if (!text) return;
+    try {
+      await navigator.clipboard.writeText(text);
+      setCopied(true);
+      setTimeout(() => setCopied(false), 1800);
+    } catch {
+      setCopied(false);
+    }
+  }
+
   return (
     <div className="auth-page">
       <div className="auth-card">
@@ -80,6 +112,21 @@ export default function LoginPage() {
           <h1>{SITE_NAME}</h1>
           <HomeLink style={{ marginLeft: "auto" }} />
         </div>
+
+        {insecure && (
+          <div
+            className="notice error-notice"
+            style={{ color: "var(--danger)", background: "transparent", border: "1px solid var(--border)" }}
+          >
+            当前页面是用 http:// 打开的，浏览器会禁用加密和本地存储，登录一定失败。请改用 https:// 地址访问。
+            <a
+              className="link-btn error-copy"
+              href={`https://${window.location.host}/login`}
+            >
+              打开安全地址
+            </a>
+          </div>
+        )}
 
         <div className="tabs">
           <button
@@ -118,6 +165,10 @@ export default function LoginPage() {
               onChange={(event) => setEmail(event.target.value)}
               placeholder="you@example.com"
               autoComplete="email"
+              autoCapitalize="none"
+              autoCorrect="off"
+              spellCheck={false}
+              inputMode="email"
               required
             />
           </div>
@@ -159,6 +210,9 @@ export default function LoginPage() {
           >
             {error}
             {rawError && <div className="error-raw">技术详情：{rawError}</div>}
+            <button type="button" className="link-btn error-copy" onClick={copyError}>
+              {copied ? "已复制" : "复制错误详情"}
+            </button>
           </div>
         )}
         {message && <div className="notice">{message}</div>}

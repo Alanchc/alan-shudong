@@ -40,12 +40,36 @@ export type AuthErrorInfo = {
   network: boolean;
 };
 
+export function normalizeEmailInput(value: string): string {
+  return value
+    .replace(/[Ａ-Ｚａ-ｚ０-９]/g, (ch) => String.fromCharCode(ch.charCodeAt(0) - 0xfee0))
+    .replace(/[\uFF20\uFE55]/g, "@")
+    .replace(/\u3000/g, " ")
+    .replace(/[\u200B-\u200D\uFEFF]/g, "")
+    .replace(/\s+/g, "")
+    .toLowerCase();
+}
+
 export function describeAuthError(err: unknown): AuthErrorInfo {
   const raw = rawMessage(err);
   const status = statusOf(err);
 
   if (NETWORK_PATTERN.test(raw)) {
     return { title: "连不上 Supabase 服务", raw, network: true };
+  }
+  if (/randomuuid|crypto\.subtle|crypto is not defined|crypto.*not a function/i.test(raw)) {
+    return {
+      title: "当前浏览器环境不支持安全加密接口，通常是页面用 http:// 打开或浏览器版本过旧。请确认地址以 https:// 开头，并换最新版 Chrome/Safari 再试",
+      raw,
+      network: false,
+    };
+  }
+  if (/quota|localstorage|local storage|dom storage/i.test(raw)) {
+    return {
+      title: "浏览器禁用了本地存储（无痕模式或隐私设置导致），关闭无痕模式、允许本站存储后再登录",
+      raw,
+      network: false,
+    };
   }
   if (/invalid login credentials/i.test(raw)) {
     return {
@@ -134,11 +158,11 @@ export async function diagnoseConnection(): Promise<string> {
     if (!res.ok) {
       return `能解析到 ${host}，但服务返回 HTTP ${res.status}：项目可能被暂停、URL 或 anon key 配置有误，请到 Supabase 控制台确认项目状态。`;
     }
-    return `可以访问 ${host}，服务本身是正常的。问题出在浏览器发往 Supabase 的请求被拦截：常见是代理/VPN 不稳定、公司或校园网限制、浏览器扩展拦截，换个网络或关掉代理再试。`;
+    return `可以访问 ${host}，服务本身是正常的。问题出在浏览器发往 Supabase 的请求被拦截：常见是代理/VPN 不稳定、网络限制、浏览器扩展或省流模式拦截，换个网络再试。`;
   } catch (err) {
     const reason =
       err instanceof Error && err.name === "AbortError" ? "请求超时（8 秒无响应）" : "域名解析或连接失败";
-    return `无法访问 ${host}：${reason}。常见原因是网络/DNS 屏蔽、代理没开、或 NEXT_PUBLIC_SUPABASE_URL 配错。`;
+    return `无法访问 ${host}：${reason}。常见原因是网络/DNS 屏蔽、代理没开、或 NEXT_PUBLIC_SUPABASE_URL 配错。手机上如果用的是移动数据，先连 Wi-Fi 再试——部分运营商网络访问 supabase.co 不稳定。`;
   } finally {
     globalThis.clearTimeout(timer);
   }
