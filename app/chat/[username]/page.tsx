@@ -290,6 +290,7 @@ export default function ChatRoomPage() {
             </>
           )}
         </div>
+        {error && <div className="chat-error">{error}</div>}
       </div>
     );
   }
