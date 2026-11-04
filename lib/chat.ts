@@ -1,6 +1,7 @@
 import { supabase } from "./supabase";
 import { currentUserId, requireUserId } from "./auth";
-import { listRelations, type FriendProfile } from "./friends";
+import { emitEvent, EVENTS } from "./events";
+import { fallbackProfile, listRelations, loadProfilesByIds, type FriendProfile } from "./friends";
 
 const COLUMNS = "id,sender_id,receiver_id,body,created_at,recalled_at,read_at";
 
@@ -70,6 +71,7 @@ export async function sendMessage(friendId: string, body: string): Promise<ChatM
     .select(COLUMNS)
     .single();
   if (error) throw error;
+  emitEvent(EVENTS.messages);
   return toMessage(data as Row);
 }
 
@@ -82,6 +84,7 @@ export async function recallMessage(messageId: string): Promise<ChatMessage> {
     .maybeSingle();
   if (error) throw error;
   if (!data) throw new Error("超过 2 分钟，这条消息不能撤回了");
+  emitEvent(EVENTS.messages);
   return toMessage(data as Row);
 }
 
@@ -94,6 +97,7 @@ export async function markConversationRead(friendId: string): Promise<void> {
     .eq("sender_id", friendId)
     .is("read_at", null);
   if (error) throw error;
+  emitEvent(EVENTS.messages);
 }
 
 export async function unreadCount(): Promise<number> {
@@ -134,21 +138,35 @@ export async function listConversations(): Promise<Conversation[]> {
     }
   });
 
-  return relations
-    .filter((relation) => relation.direction === "friend")
-    .map((relation) => {
-      const summary = summaries.get(relation.other.id);
-      return {
-        friend: relation.other,
-        lastMessage: summary?.last ?? null,
-        unread: summary?.unread ?? 0,
-      };
-    })
-    .sort((a, b) => {
-      const at = a.lastMessage ? Date.parse(a.lastMessage.createdAt) : 0;
-      const bt = b.lastMessage ? Date.parse(b.lastMessage.createdAt) : 0;
-      return bt - at;
+  const friends = new Map<string, FriendProfile>();
+  relations.forEach((relation) => {
+    if (relation.direction === "friend") friends.set(relation.other.id, relation.other);
+  });
+
+  // 有消息往来但好友关系行已缺失（例如被删好友）时，也要保留这条会话，避免提醒有红点却找不到聊天
+  const unknownIds = Array.from(summaries.keys()).filter((id) => !friends.has(id));
+  const unknownProfiles = await loadProfilesByIds(unknownIds);
+
+  const conversations: Conversation[] = [];
+  summaries.forEach((summary, otherId) => {
+    conversations.push({
+      friend:
+        friends.get(otherId) ?? unknownProfiles.get(otherId) ?? fallbackProfile(otherId),
+      lastMessage: summary.last,
+      unread: summary.unread,
     });
+  });
+  friends.forEach((friend, id) => {
+    if (!summaries.has(id)) {
+      conversations.push({ friend, lastMessage: null, unread: 0 });
+    }
+  });
+
+  return conversations.sort((a, b) => {
+    const at = a.lastMessage ? Date.parse(a.lastMessage.createdAt) : 0;
+    const bt = b.lastMessage ? Date.parse(b.lastMessage.createdAt) : 0;
+    return bt - at;
+  });
 }
 
 export type MessageChange = {

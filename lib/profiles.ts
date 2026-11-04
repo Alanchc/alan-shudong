@@ -59,6 +59,29 @@ export async function getProfileByUsername(username: string): Promise<Profile | 
   return data ? toProfile(data as Row) : null;
 }
 
+const UUID_PATTERN = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+
+export function looksLikeUserId(value: string) {
+  return UUID_PATTERN.test(value);
+}
+
+export async function getProfileById(id: string): Promise<Profile | null> {
+  const { data, error } = await supabase
+    .from("profiles")
+    .select(COLUMNS)
+    .eq("id", id)
+    .maybeSingle();
+  if (error) throw error;
+  return data ? toProfile(data as Row) : null;
+}
+
+// 允许用用户名或用户 id 打开主页/聊天，避免资料缺失时链接直接失效
+export async function getProfileByHandle(handle: string): Promise<Profile | null> {
+  const found = await getProfileByUsername(handle);
+  if (found || !looksLikeUserId(handle)) return found;
+  return getProfileById(handle);
+}
+
 export interface ProfileInput {
   username: string;
   nickname: string;

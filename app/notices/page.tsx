@@ -4,7 +4,7 @@ import Link from "next/link";
 import HomeLink from "@/components/HomeLink";
 import MobileNav from "@/components/MobileNav";
 import UserAvatar, { personName } from "@/components/UserAvatar";
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { errorMessage } from "@/lib/errors";
 import { searchProfiles, type FriendProfile } from "@/lib/friends";
 import {
@@ -14,6 +14,7 @@ import {
   isCurrentUserAdmin,
   listAdmins,
   listAnnouncements,
+  markAnnouncementsRead,
   revokeAdmin,
   type AdminMember,
   type Announcement,
@@ -54,15 +55,21 @@ export default function NoticesPage() {
   const [searching, setSearching] = useState(false);
   const [busyId, setBusyId] = useState<string | null>(null);
 
+  const refresh = useCallback(async () => {
+    const list = await listAnnouncements();
+    setNotices(list);
+    await markAnnouncementsRead(list[0]?.createdAt);
+    return list;
+  }, []);
+
   useEffect(() => {
     if (!session) return;
     let alive = true;
 
     setLoading(true);
-    Promise.all([listAnnouncements(), isCurrentUserAdmin()])
-      .then(([list, admin]) => {
+    Promise.all([refresh(), isCurrentUserAdmin()])
+      .then(([, admin]) => {
         if (!alive) return;
-        setNotices(list);
         setIsAdmin(admin);
         setError(null);
       })
@@ -73,10 +80,26 @@ export default function NoticesPage() {
         if (alive) setLoading(false);
       });
 
+    const timer = window.setInterval(() => {
+      if (document.visibilityState !== "visible") return;
+      refresh()
+        .then(() => alive && setError(null))
+        .catch(() => {});
+    }, 30000);
+    const onVisible = () => {
+      if (document.visibilityState !== "visible") return;
+      refresh()
+        .then(() => alive && setError(null))
+        .catch(() => {});
+    };
+    document.addEventListener("visibilitychange", onVisible);
+
     return () => {
       alive = false;
+      window.clearInterval(timer);
+      document.removeEventListener("visibilitychange", onVisible);
     };
-  }, [session]);
+  }, [session, refresh]);
 
   useEffect(() => {
     if (!isAdmin) return;
@@ -103,7 +126,7 @@ export default function NoticesPage() {
       await createAnnouncement(title, body);
       setTitle("");
       setBody("");
-      setNotices(await listAnnouncements());
+      await refresh();
     } catch (err) {
       setError(errorMessage(err, "发布失败"));
     } finally {
@@ -172,8 +195,8 @@ export default function NoticesPage() {
   }
 
   return (
-    <div className="chat-list-page">
-      <div className="friends-inner">
+    <div className="me-page">
+      <div className="me-inner">
         <div className="me-head">
           <span className="logo">树</span>
           <span className="brand-name">{SITE_NAME}</span>
@@ -217,7 +240,8 @@ export default function NoticesPage() {
 
             <section className="friends-section">
               <div className="friends-section-title">
-                通知 <span>{notices.length}</span>
+                通知
+                {notices.length > 0 && <span>{notices.length}</span>}
               </div>
 
               {loading ? (
@@ -230,12 +254,10 @@ export default function NoticesPage() {
               ) : (
                 notices.map((item) => (
                   <article key={item.id} className="notice-card">
-                    <div className="notice-card-head">
-                      <div className="notice-card-title">{item.title || "通知"}</div>
-                      <span className="notice-card-meta">
-                        {item.authorName} · {stamp(item.createdAt)}
-                      </span>
+                    <div className="notice-card-meta">
+                      {item.authorName} · {stamp(item.createdAt)}
                     </div>
+                    {item.title && <div className="notice-card-title">{item.title}</div>}
                     <div className="notice-card-body">{item.body}</div>
                     {isAdmin && (
                       <div className="notice-card-actions">
@@ -257,7 +279,8 @@ export default function NoticesPage() {
             {isAdmin && (
               <section className="friends-section">
                 <div className="friends-section-title">
-                  管理员 <span>{admins.length}</span>
+                  管理员
+                  {admins.length > 0 && <span>{admins.length}</span>}
                 </div>
 
                 <form className="admin-search" onSubmit={handleSearch}>

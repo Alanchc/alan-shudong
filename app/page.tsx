@@ -1,5 +1,12 @@
+"use client";
+
 import Link from "next/link";
+import NoticeBell from "@/components/NoticeBell";
+import { useEffect, useState } from "react";
+import { unreadCount } from "@/lib/chat";
+import { pendingRequestCount } from "@/lib/friends";
 import { AUTHOR_NAME, SITE_DESC, SITE_NAME } from "@/lib/site";
+import { useSession } from "@/lib/useSession";
 
 const MODULES = [
   {
@@ -49,17 +56,6 @@ const MODULES = [
     ),
   },
   {
-    href: "/notices",
-    name: "通知",
-    desc: "管理员发布的全站公告，重要消息都在这里。",
-    icon: (
-      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6">
-        <path d="M12 4a5.5 5.5 0 015.5 5.5v3.2l1.5 2.8H5l1.5-2.8V9.5A5.5 5.5 0 0112 4z" />
-        <path d="M9.5 17a2.5 2.5 0 005 0" />
-      </svg>
-    ),
-  },
-  {
     href: "/me",
     name: "我的",
     desc: "用户名、头像、简介，以及日记统计与主题设置。",
@@ -73,6 +69,46 @@ const MODULES = [
 ];
 
 export default function PortalPage() {
+  const session = useSession();
+  const [badges, setBadges] = useState({ chat: 0, friends: 0 });
+
+  useEffect(() => {
+    if (!session) {
+      setBadges({ chat: 0, friends: 0 });
+      return;
+    }
+
+    let alive = true;
+    const load = () => {
+      Promise.all([unreadCount(), pendingRequestCount()])
+        .then(([chat, friends]) => {
+          if (alive) setBadges({ chat, friends });
+        })
+        .catch(() => {});
+    };
+
+    load();
+    const timer = window.setInterval(() => {
+      if (document.visibilityState === "visible") load();
+    }, 30000);
+    const onVisible = () => {
+      if (document.visibilityState === "visible") load();
+    };
+    document.addEventListener("visibilitychange", onVisible);
+
+    return () => {
+      alive = false;
+      window.clearInterval(timer);
+      document.removeEventListener("visibilitychange", onVisible);
+    };
+  }, [session]);
+
+  const badgeOf = (href: string) => {
+    if (href === "/chat") return badges.chat;
+    if (href === "/friends") return badges.friends;
+    return 0;
+  };
+
   return (
     <div className="portal">
       <div className="portal-inner">
@@ -82,19 +118,28 @@ export default function PortalPage() {
             <h1 className="portal-title">{SITE_NAME}</h1>
             <p className="portal-desc">{SITE_DESC}</p>
           </div>
+          <NoticeBell className="portal-bell" />
         </div>
 
         <div className="module-grid">
-          {MODULES.map((item) => (
-            <Link key={item.href} href={item.href} className="module-card">
-              <span className="module-icon">{item.icon}</span>
-              <div className="module-body">
-                <div className="module-name">{item.name}</div>
-                <div className="module-desc">{item.desc}</div>
-              </div>
-              <span className="module-arrow">→</span>
-            </Link>
-          ))}
+          {MODULES.map((item) => {
+            const badge = badgeOf(item.href);
+            return (
+              <Link key={item.href} href={item.href} className="module-card">
+                <span className="module-icon">{item.icon}</span>
+                <div className="module-body">
+                  <div className="module-name">
+                    {item.name}
+                    {badge > 0 && (
+                      <span className="module-badge">{badge > 99 ? "99+" : badge}</span>
+                    )}
+                  </div>
+                  <div className="module-desc">{item.desc}</div>
+                </div>
+                <span className="module-arrow">→</span>
+              </Link>
+            );
+          })}
 
           <div className="module-card module-card-off">
             <span className="module-icon">

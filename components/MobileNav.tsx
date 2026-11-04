@@ -4,6 +4,9 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useEffect, useState } from "react";
 import { subscribeMessages, unreadCount } from "@/lib/chat";
+import { EVENTS, onEvent } from "@/lib/events";
+import { pendingRequestCount } from "@/lib/friends";
+import { unreadAnnouncementsCount } from "@/lib/notices";
 import { useSession } from "@/lib/useSession";
 
 const ITEMS = [
@@ -60,6 +63,16 @@ const ITEMS = [
     ),
   },
   {
+    href: "/notices",
+    label: "通知",
+    icon: (
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7">
+        <path d="M12 3.6a5 5 0 015 5v3.4l1.4 2.7H5.6l1.4-2.7V8.6a5 5 0 015-5z" />
+        <path d="M9.6 17.4a2.4 2.4 0 004.8 0" />
+      </svg>
+    ),
+  },
+  {
     href: "/me",
     label: "我的",
     icon: (
@@ -74,24 +87,44 @@ const ITEMS = [
 export default function MobileNav() {
   const pathname = usePathname();
   const session = useSession();
-  const [unread, setUnread] = useState(0);
+  const [counts, setCounts] = useState({ chat: 0, friends: 0, notices: 0 });
 
   useEffect(() => {
     if (!session) {
-      setUnread(0);
+      setCounts({ chat: 0, friends: 0, notices: 0 });
       return;
     }
+
     let alive = true;
     const load = () => {
-      unreadCount()
-        .then((count) => alive && setUnread(count))
+      Promise.all([unreadCount(), pendingRequestCount(), unreadAnnouncementsCount()])
+        .then(([chat, friends, notices]) => {
+          if (alive) setCounts({ chat, friends, notices });
+        })
         .catch(() => {});
     };
+
     load();
     const off = subscribeMessages(() => load());
+    const timer = window.setInterval(() => {
+      if (document.visibilityState === "visible") load();
+    }, 30000);
+    const onVisible = () => {
+      if (document.visibilityState === "visible") load();
+    };
+    document.addEventListener("visibilitychange", onVisible);
+    const offMessages = onEvent(EVENTS.messages, load);
+    const offFriends = onEvent(EVENTS.friends, load);
+    const offNotices = onEvent(EVENTS.notices, load);
+
     return () => {
       alive = false;
       off();
+      window.clearInterval(timer);
+      document.removeEventListener("visibilitychange", onVisible);
+      offMessages();
+      offFriends();
+      offNotices();
     };
   }, [session]);
 
@@ -102,14 +135,21 @@ export default function MobileNav() {
           pathname === item.href ||
           (item.href === "/diary" && pathname.startsWith("/diary/")) ||
           (item.href === "/feed" && pathname.startsWith("/feed/")) ||
-          (item.href === "/chat" && pathname.startsWith("/chat/"));
+          (item.href === "/chat" && pathname.startsWith("/chat/")) ||
+          (item.href === "/notices" && pathname.startsWith("/notices/"));
+        const badge =
+          item.href === "/chat"
+            ? counts.chat
+            : item.href === "/friends"
+              ? counts.friends
+              : item.href === "/notices"
+                ? counts.notices
+                : 0;
         return (
           <Link key={item.href} href={item.href} className={active ? "on" : undefined}>
             <span className="nav-icon">
               {item.icon}
-              {item.href === "/chat" && unread > 0 && (
-                <span className="nav-badge">{unread > 99 ? "99+" : unread}</span>
-              )}
+              {badge > 0 && <span className="nav-badge">{badge > 99 ? "99+" : badge}</span>}
             </span>
             {item.label}
           </Link>

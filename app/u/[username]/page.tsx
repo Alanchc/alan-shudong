@@ -13,7 +13,7 @@ import {
   sendFriendRequest,
   type Relation,
 } from "@/lib/friends";
-import { getProfileByUsername, type Profile } from "@/lib/profiles";
+import { getProfileByHandle, type Profile } from "@/lib/profiles";
 import type { Entry } from "@/lib/types";
 import { useSession } from "@/lib/useSession";
 
@@ -37,7 +37,7 @@ export default function ProfilePage() {
     let alive = true;
     setLoading(true);
 
-    getProfileByUsername(username)
+    getProfileByHandle(username)
       .then(async (found) => {
         if (!alive) return;
         if (!found) {

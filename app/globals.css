@@ -1327,8 +1327,26 @@ select {
 }
 
 .module-name {
+  display: flex;
+  align-items: center;
+  gap: 6px;
   font-size: 15px;
   font-weight: 600;
+}
+
+.module-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 16px;
+  height: 16px;
+  padding: 0 5px;
+  border-radius: 999px;
+  background: #d14343;
+  color: #fff;
+  font-size: 9.5px;
+  font-weight: 600;
+  line-height: 1;
 }
 
 .module-desc {
@@ -1679,6 +1697,7 @@ select {
 .me-actions {
   display: flex;
   align-items: center;
+  flex-wrap: wrap;
   gap: 12px;
   margin-top: 4px;
 }
@@ -1950,8 +1969,8 @@ a.friend-name:hover {
   height: 17px;
   padding: 0 5px;
   border-radius: 999px;
-  background: var(--brand);
-  color: var(--brand-text);
+  background: #d14343;
+  color: #fff;
   font-size: 10px;
   line-height: 17px;
   text-align: center;
@@ -2152,6 +2171,48 @@ a.friend-name:hover {
   font-size: 9px;
   line-height: 15px;
   text-align: center;
+}
+
+/* ---------- 通知铃铛 ---------- */
+.bell-btn {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 30px;
+  height: 30px;
+  flex: none;
+  border: 1px solid var(--border);
+  border-radius: 9px;
+  background: var(--surface);
+  color: var(--muted);
+  transition: color 0.15s ease, border-color 0.15s ease;
+}
+
+.bell-btn:hover {
+  color: var(--brand);
+  border-color: var(--brand);
+}
+
+.bell-badge {
+  position: absolute;
+  top: -6px;
+  right: -6px;
+  min-width: 16px;
+  height: 16px;
+  padding: 0 4px;
+  border-radius: 999px;
+  background: #d14343;
+  color: #fff;
+  font-size: 9.5px;
+  font-weight: 600;
+  line-height: 16px;
+  text-align: center;
+}
+
+.portal-bell,
+.me-bell {
+  margin-left: auto;
 }
 
 /* ---------- 可见性 ---------- */
@@ -2409,30 +2470,33 @@ select option {
 }
 
 .notice-card {
-  padding: 12px 0;
+  padding: 13px 0;
   border-top: 1px solid var(--border);
 }
 
-.notice-card-head {
-  display: flex;
-  align-items: baseline;
-  justify-content: space-between;
-  gap: 10px;
+.notice-card:first-of-type {
+  border-top: 0;
+  padding-top: 2px;
 }
 
-.notice-card-title {
-  font-size: 13.5px;
-  font-weight: 600;
+.notice-card:last-of-type {
+  padding-bottom: 10px;
 }
 
 .notice-card-meta {
-  flex: none;
+  margin-bottom: 4px;
   font-size: 10.5px;
   color: var(--muted);
 }
 
+.notice-card-title {
+  margin-bottom: 4px;
+  font-size: 13.5px;
+  font-weight: 600;
+  line-height: 1.5;
+}
+
 .notice-card-body {
-  margin-top: 6px;
   font-size: 12.5px;
   line-height: 1.75;
   white-space: pre-line;
@@ -2441,7 +2505,7 @@ select option {
 
 .notice-card-actions {
   display: flex;
-  gap: 12px;
+  justify-content: flex-end;
   margin-top: 6px;
 }
 

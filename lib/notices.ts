@@ -1,5 +1,6 @@
 import { supabase } from "./supabase";
 import { currentUserId, requireUserId } from "./auth";
+import { emitEvent, EVENTS } from "./events";
 
 type AnnouncementRow = {
   id: string;
@@ -70,6 +71,39 @@ export async function listAnnouncements(): Promise<Announcement[]> {
       authorName: profile ? profile.nickname || profile.username : "管理员",
     };
   });
+}
+
+function seenKey(userId: string) {
+  return `notices:seen:${userId}`;
+}
+
+export async function unreadAnnouncementsCount(): Promise<number> {
+  const me = await currentUserId();
+  if (!me || typeof window === "undefined") return 0;
+
+  const seen = window.localStorage.getItem(seenKey(me));
+  let query = supabase.from("announcements").select("id", { count: "exact", head: true });
+  if (seen) query = query.gt("created_at", seen);
+
+  const { count, error } = await query;
+  if (error) return 0;
+  return count ?? 0;
+}
+
+export async function markAnnouncementsRead(latestCreatedAt?: string): Promise<void> {
+  const me = await currentUserId();
+  if (!me || typeof window === "undefined") return;
+
+  const key = seenKey(me);
+  const prev = window.localStorage.getItem(key);
+  if (latestCreatedAt) {
+    if (prev === latestCreatedAt) return;
+    window.localStorage.setItem(key, latestCreatedAt);
+  } else {
+    if (prev) return;
+    window.localStorage.setItem(key, new Date().toISOString());
+  }
+  emitEvent(EVENTS.notices);
 }
 
 export async function createAnnouncement(title: string, body: string) {

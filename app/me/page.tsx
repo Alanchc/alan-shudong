@@ -4,6 +4,7 @@ import Link from "next/link";
 import HomeLink from "@/components/HomeLink";
 import { useEffect, useRef, useState } from "react";
 import MobileNav from "@/components/MobileNav";
+import NoticeBell from "@/components/NoticeBell";
 import ThemeToggle from "@/components/ThemeToggle";
 import { listEntries } from "@/lib/entries";
 import { errorMessage } from "@/lib/errors";
@@ -94,7 +95,8 @@ export default function MePage() {
         <div className="me-head">
           <span className="logo">树</span>
           <span className="brand-name">{SITE_NAME}</span>
-          <HomeLink style={{ marginLeft: "auto" }} />
+          <NoticeBell className="me-bell" />
+          <HomeLink />
         </div>
 
         {session ? (
@@ -176,9 +178,6 @@ export default function MePage() {
                     查看我的主页
                   </Link>
                 )}
-                <Link href="/notices" className="link-btn">
-                  通知
-                </Link>
               </div>
             </div>
 

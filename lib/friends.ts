@@ -1,5 +1,6 @@
 import { supabase } from "./supabase";
-import { requireUserId } from "./auth";
+import { currentUserId, requireUserId } from "./auth";
+import { emitEvent, EVENTS } from "./events";
 import { normalizeUsername } from "./profiles";
 
 type ProfileRow = {
@@ -58,7 +59,7 @@ function toRelation(row: FriendshipRow, me: string, other: FriendProfile): Relat
   };
 }
 
-async function loadProfiles(ids: string[]): Promise<Map<string, FriendProfile>> {
+export async function loadProfilesByIds(ids: string[]): Promise<Map<string, FriendProfile>> {
   if (ids.length === 0) return new Map();
   const { data, error } = await supabase
     .from("profiles")
@@ -99,19 +100,24 @@ export async function listRelations(): Promise<Relation[]> {
   const otherIds = Array.from(
     new Set(rows.map((row) => (row.requester_id === me ? row.addressee_id : row.requester_id))),
   );
-  const profiles = await loadProfiles(otherIds);
+  const profiles = await loadProfilesByIds(otherIds);
 
   return rows.map((row) => {
     const otherId = row.requester_id === me ? row.addressee_id : row.requester_id;
-    const other = profiles.get(otherId) ?? {
-      id: otherId,
-      username: "unknown",
-      nickname: null,
-      bio: null,
-      avatarUrl: null,
-    };
+    const other = profiles.get(otherId) ?? fallbackProfile(otherId);
     return toRelation(row, me, other);
   });
+}
+
+// 资料行缺失时（例如注册后还没填资料）用 id 兜底，保证聊天和主页链接仍然可用
+export function fallbackProfile(id: string): FriendProfile {
+  return {
+    id,
+    username: id,
+    nickname: "对方",
+    bio: null,
+    avatarUrl: null,
+  };
 }
 
 export async function getRelationWith(userId: string): Promise<Relation | null> {
@@ -128,15 +134,22 @@ export async function getRelationWith(userId: string): Promise<Relation | null> 
 
   const row = data as FriendshipRow;
   const otherId = row.requester_id === me ? row.addressee_id : row.requester_id;
-  const profiles = await loadProfiles([otherId]);
-  const other = profiles.get(otherId) ?? {
-    id: otherId,
-    username: "unknown",
-    nickname: null,
-    bio: null,
-    avatarUrl: null,
-  };
+  const profiles = await loadProfilesByIds([otherId]);
+  const other = profiles.get(otherId) ?? fallbackProfile(otherId);
   return toRelation(row, me, other);
+}
+
+export async function pendingRequestCount(): Promise<number> {
+  const me = await currentUserId();
+  if (!me) return 0;
+
+  const { count, error } = await supabase
+    .from("friendships")
+    .select("id", { count: "exact", head: true })
+    .eq("addressee_id", me)
+    .eq("status", "pending");
+  if (error) return 0;
+  return count ?? 0;
 }
 
 export async function sendFriendRequest(userId: string): Promise<void> {
@@ -152,6 +165,7 @@ export async function sendFriendRequest(userId: string): Promise<void> {
     if (error.code === "23505") throw new Error("已经申请过或已经是好友了");
     throw error;
   }
+  emitEvent(EVENTS.friends);
 }
 
 export async function acceptRequest(relationId: string): Promise<void> {
@@ -160,9 +174,11 @@ export async function acceptRequest(relationId: string): Promise<void> {
     .update({ status: "accepted", updated_at: new Date().toISOString() })
     .eq("id", relationId);
   if (error) throw error;
+  emitEvent(EVENTS.friends);
 }
 
 export async function removeRelation(relationId: string): Promise<void> {
   const { error } = await supabase.from("friendships").delete().eq("id", relationId);
   if (error) throw error;
+  emitEvent(EVENTS.friends);
 }

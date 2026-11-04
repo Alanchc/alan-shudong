@@ -16,8 +16,12 @@ import {
 } from "@/lib/chat";
 import { formatTime } from "@/lib/format";
 import { getRelationWith, type Relation } from "@/lib/friends";
-import { getProfileByUsername, type Profile } from "@/lib/profiles";
+import { getProfileByHandle, looksLikeUserId, type Profile } from "@/lib/profiles";
 import { useSession } from "@/lib/useSession";
+
+function placeholderProfile(id: string): Profile {
+  return { id, username: "", nickname: "对方", bio: null, avatarUrl: null, createdAt: "" };
+}
 
 function dayLabel(iso: string) {
   const date = new Date(iso);
@@ -53,25 +57,18 @@ export default function ChatRoomPage() {
     if (!username || session === undefined) return;
     let alive = true;
 
-    getProfileByUsername(username)
-      .then(async (found) => {
+    getProfileByHandle(username)
+      .then((found) => {
         if (!alive) return;
-        if (!found) {
+        const target = found ?? (looksLikeUserId(username) ? placeholderProfile(username) : null);
+        if (!target) {
           setNotFound(true);
           return;
         }
-        setFriend(found);
-        if (!session || session.user.id === found.id) {
-          setReady(true);
-          return;
-        }
-        const rel = await getRelationWith(found.id);
-        if (alive) {
-          setRelation(rel);
-          setReady(true);
-        }
+        setFriend(target);
       })
-      .catch(() => alive && setNotFound(true));
+      .catch(() => alive && setNotFound(true))
+      .finally(() => alive && setReady(true));
 
     return () => {
       alive = false;
@@ -79,7 +76,23 @@ export default function ChatRoomPage() {
   }, [username, session]);
 
   useEffect(() => {
-    if (!friend || !isFriend) return;
+    if (!friend || session === undefined) return;
+    if (!session || session.user.id === friend.id) {
+      setRelation(null);
+      return;
+    }
+    let alive = true;
+    getRelationWith(friend.id)
+      .then((rel) => alive && setRelation(rel))
+      .catch(() => alive && setRelation(null));
+    return () => {
+      alive = false;
+    };
+  }, [friend, session]);
+
+  // 消息加载不再依赖好友关系：关系行缺失时也要能看到历史消息，避免聊天框空白
+  useEffect(() => {
+    if (!friend || !meId || meId === friend.id) return;
     let alive = true;
     setLoading(true);
     listMessages(friend.id)
@@ -93,10 +106,10 @@ export default function ChatRoomPage() {
     return () => {
       alive = false;
     };
-  }, [friend, isFriend]);
+  }, [friend, meId]);
 
   useEffect(() => {
-    if (!friend || !isFriend || !meId) return;
+    if (!friend || !meId) return;
     const off = subscribeMessages((change) => {
       const message = change.message;
       if (!message) return;
@@ -117,10 +130,10 @@ export default function ChatRoomPage() {
       }
     });
     return off;
-  }, [friend, isFriend, meId]);
+  }, [friend, meId]);
 
   useEffect(() => {
-    if (!friend || !isFriend || !meId) return;
+    if (!friend || !meId) return;
     let alive = true;
 
     const sync = () => {
@@ -144,7 +157,7 @@ export default function ChatRoomPage() {
       window.clearInterval(timer);
       document.removeEventListener("visibilitychange", sync);
     };
-  }, [friend, isFriend, meId]);
+  }, [friend, meId]);
 
   useEffect(() => {
     bottomRef.current?.scrollIntoView({ block: "end" });
@@ -241,16 +254,41 @@ export default function ChatRoomPage() {
           <Link href="/chat" className="link-btn">
             返回
           </Link>
-          <div className="chat-head-name">@{friend.username}</div>
+          <div className="chat-head-name">{personName(friend)}</div>
           <HomeLink style={{ marginLeft: "auto" }} />
         </div>
         <div className="chat-body">
-          <div className="profile-empty">
-            你们还不是好友，先加好友才能聊天
-            <Link href={`/u/${friend.username}`} className="primary-btn" style={{ marginTop: 12 }}>
-              去对方主页
-            </Link>
-          </div>
+          {loading ? (
+            <div className="skeleton" style={{ height: 120 }} />
+          ) : messages.length === 0 ? (
+            <div className="profile-empty">
+              你们还不是好友，先加好友才能聊天
+              {friend.username && (
+                <Link href={`/u/${friend.username}`} className="primary-btn" style={{ marginTop: 12 }}>
+                  去对方主页
+                </Link>
+              )}
+            </div>
+          ) : (
+            <>
+              <div className="chat-day">你们还不是好友，以下是历史消息</div>
+              {messages.map((message) => (
+                <div
+                  key={message.id}
+                  className={`chat-msg ${message.senderId === meId ? "me" : ""}`}
+                >
+                  <div className="chat-bubble-wrap">
+                    <div className="chat-bubble">
+                      {message.recalledAt ? "该消息已撤回" : message.body}
+                    </div>
+                    <div className="chat-meta">
+                      <span>{formatTime(message.createdAt)}</span>
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </>
+          )}
         </div>
       </div>
     );
@@ -262,10 +300,17 @@ export default function ChatRoomPage() {
         <Link href="/chat" className="link-btn">
           返回
         </Link>
-        <Link href={`/u/${friend.username}`} className="chat-head-person">
-          <UserAvatar person={friend} size={30} />
-          <span>{personName(friend)}</span>
-        </Link>
+        {friend.username ? (
+          <Link href={`/u/${friend.username}`} className="chat-head-person">
+            <UserAvatar person={friend} size={30} />
+            <span>{personName(friend)}</span>
+          </Link>
+        ) : (
+          <div className="chat-head-person">
+            <UserAvatar person={friend} size={30} />
+            <span>{personName(friend)}</span>
+          </div>
+        )}
         <HomeLink style={{ marginLeft: "auto" }} />
       </div>
 
