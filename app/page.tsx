@@ -49,6 +49,17 @@ const MODULES = [
     ),
   },
   {
+    href: "/notices",
+    name: "通知",
+    desc: "管理员发布的全站公告，重要消息都在这里。",
+    icon: (
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6">
+        <path d="M12 4a5.5 5.5 0 015.5 5.5v3.2l1.5 2.8H5l1.5-2.8V9.5A5.5 5.5 0 0112 4z" />
+        <path d="M9.5 17a2.5 2.5 0 005 0" />
+      </svg>
+    ),
+  },
+  {
     href: "/me",
     name: "我的",
     desc: "用户名、头像、简介，以及日记统计与主题设置。",

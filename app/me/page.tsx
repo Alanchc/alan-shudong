@@ -176,6 +176,9 @@ export default function MePage() {
                     查看我的主页
                   </Link>
                 )}
+                <Link href="/notices" className="link-btn">
+                  通知
+                </Link>
               </div>
             </div>
 
