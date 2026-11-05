@@ -6,7 +6,6 @@ import { useEffect, useState } from "react";
 import { subscribeMessages, unreadCount } from "@/lib/chat";
 import { EVENTS, onEvent } from "@/lib/events";
 import { pendingRequestCount } from "@/lib/friends";
-import { unreadAnnouncementsCount } from "@/lib/notices";
 import { useSession } from "@/lib/useSession";
 
 const ITEMS = [
@@ -17,6 +16,27 @@ const ITEMS = [
       <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7">
         <path d="M3 10.5L12 3l9 7.5" />
         <path d="M5 9.5V21h14V9.5" />
+      </svg>
+    ),
+  },
+  {
+    href: "/friends",
+    label: "好友",
+    icon: (
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7">
+        <circle cx="9" cy="8" r="3.4" />
+        <path d="M2.8 19a6.2 6.2 0 0112.4 0" />
+        <path d="M16 5.4a3.4 3.4 0 010 6.4M17.5 13.4a6.2 6.2 0 013.7 5.6" />
+      </svg>
+    ),
+  },
+  {
+    href: "/chat",
+    label: "消息",
+    icon: (
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7">
+        <path d="M4 5.5h16v11h-9l-4.5 3.5v-3.5H4z" />
+        <path d="M8 9.5h8M8 12.5h5" />
       </svg>
     ),
   },
@@ -42,37 +62,6 @@ const ITEMS = [
     ),
   },
   {
-    href: "/chat",
-    label: "消息",
-    icon: (
-      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7">
-        <path d="M4 5.5h16v11h-9l-4.5 3.5v-3.5H4z" />
-        <path d="M8 9.5h8M8 12.5h5" />
-      </svg>
-    ),
-  },
-  {
-    href: "/friends",
-    label: "好友",
-    icon: (
-      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7">
-        <circle cx="9" cy="8" r="3.4" />
-        <path d="M2.8 19a6.2 6.2 0 0112.4 0" />
-        <path d="M16 5.4a3.4 3.4 0 010 6.4M17.5 13.4a6.2 6.2 0 013.7 5.6" />
-      </svg>
-    ),
-  },
-  {
-    href: "/notices",
-    label: "通知",
-    icon: (
-      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7">
-        <path d="M12 3.6a5 5 0 015 5v3.4l1.4 2.7H5.6l1.4-2.7V8.6a5 5 0 015-5z" />
-        <path d="M9.6 17.4a2.4 2.4 0 004.8 0" />
-      </svg>
-    ),
-  },
-  {
     href: "/me",
     label: "我的",
     icon: (
@@ -87,19 +76,19 @@ const ITEMS = [
 export default function MobileNav() {
   const pathname = usePathname();
   const session = useSession();
-  const [counts, setCounts] = useState({ chat: 0, friends: 0, notices: 0 });
+  const [counts, setCounts] = useState({ chat: 0, friends: 0 });
 
   useEffect(() => {
     if (!session) {
-      setCounts({ chat: 0, friends: 0, notices: 0 });
+      setCounts({ chat: 0, friends: 0 });
       return;
     }
 
     let alive = true;
     const load = () => {
-      Promise.all([unreadCount(), pendingRequestCount(), unreadAnnouncementsCount()])
-        .then(([chat, friends, notices]) => {
-          if (alive) setCounts({ chat, friends, notices });
+      Promise.all([unreadCount(), pendingRequestCount()])
+        .then(([chat, friends]) => {
+          if (alive) setCounts({ chat, friends });
         })
         .catch(() => {});
     };
@@ -115,7 +104,6 @@ export default function MobileNav() {
     document.addEventListener("visibilitychange", onVisible);
     const offMessages = onEvent(EVENTS.messages, load);
     const offFriends = onEvent(EVENTS.friends, load);
-    const offNotices = onEvent(EVENTS.notices, load);
 
     return () => {
       alive = false;
@@ -124,7 +112,6 @@ export default function MobileNav() {
       document.removeEventListener("visibilitychange", onVisible);
       offMessages();
       offFriends();
-      offNotices();
     };
   }, [session]);
 
@@ -135,16 +122,9 @@ export default function MobileNav() {
           pathname === item.href ||
           (item.href === "/diary" && pathname.startsWith("/diary/")) ||
           (item.href === "/feed" && pathname.startsWith("/feed/")) ||
-          (item.href === "/chat" && pathname.startsWith("/chat/")) ||
-          (item.href === "/notices" && pathname.startsWith("/notices/"));
+          (item.href === "/chat" && pathname.startsWith("/chat/"));
         const badge =
-          item.href === "/chat"
-            ? counts.chat
-            : item.href === "/friends"
-              ? counts.friends
-              : item.href === "/notices"
-                ? counts.notices
-                : 0;
+          item.href === "/chat" ? counts.chat : item.href === "/friends" ? counts.friends : 0;
         return (
           <Link key={item.href} href={item.href} className={active ? "on" : undefined}>
             <span className="nav-icon">

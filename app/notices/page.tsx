@@ -4,7 +4,7 @@ import Link from "next/link";
 import HomeLink from "@/components/HomeLink";
 import MobileNav from "@/components/MobileNav";
 import UserAvatar, { personName } from "@/components/UserAvatar";
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { errorMessage } from "@/lib/errors";
 import { searchProfiles, type FriendProfile } from "@/lib/friends";
 import {
@@ -15,13 +15,34 @@ import {
   listAdmins,
   listAnnouncements,
   markAnnouncementsRead,
+  readSeenAt,
   revokeAdmin,
   type AdminMember,
   type Announcement,
 } from "@/lib/notices";
 import { normalizeUsername } from "@/lib/profiles";
 import { SITE_NAME } from "@/lib/site";
+import { mediaUrl } from "@/lib/supabase";
 import { useSession } from "@/lib/useSession";
+
+function listStamp(iso: string) {
+  const date = new Date(iso);
+  const now = new Date();
+  if (date.toDateString() === now.toDateString()) {
+    return date.toLocaleTimeString("zh-CN", {
+      hour: "2-digit",
+      minute: "2-digit",
+      hour12: false,
+    });
+  }
+  const yesterday = new Date(now);
+  yesterday.setDate(now.getDate() - 1);
+  if (date.toDateString() === yesterday.toDateString()) return "昨天";
+  const month = String(date.getMonth() + 1).padStart(2, "0");
+  const day = String(date.getDate()).padStart(2, "0");
+  if (date.getFullYear() === now.getFullYear()) return `${month}-${day}`;
+  return `${date.getFullYear()}-${month}-${day}`;
+}
 
 function stamp(iso: string) {
   const date = new Date(iso);
@@ -44,6 +65,9 @@ export default function NoticesPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [isAdmin, setIsAdmin] = useState(false);
+  const [unreadIds, setUnreadIds] = useState<Set<string>>(new Set());
+  const [expandedId, setExpandedId] = useState<string | null>(null);
+  const seenAtRef = useRef<string | null | undefined>(undefined);
 
   const [title, setTitle] = useState("");
   const [body, setBody] = useState("");
@@ -58,9 +82,19 @@ export default function NoticesPage() {
   const refresh = useCallback(async () => {
     const list = await listAnnouncements();
     setNotices(list);
+    // 首次加载时冻结「已读时间点」，轮询时不再重算，避免红点在停留期间自己消失
+    if (seenAtRef.current === undefined) {
+      seenAtRef.current = session ? readSeenAt(session.user.id) : null;
+    }
+    const cutoff = seenAtRef.current;
+    setUnreadIds(
+      new Set(
+        cutoff ? list.filter((item) => item.createdAt > cutoff).map((item) => item.id) : list.map((item) => item.id),
+      ),
+    );
     await markAnnouncementsRead(list[0]?.createdAt);
     return list;
-  }, []);
+  }, [session]);
 
   useEffect(() => {
     if (!session) return;
@@ -252,27 +286,68 @@ export default function NoticesPage() {
                   {isAdmin && <div style={{ marginTop: 8 }}>在上面发布第一条吧</div>}
                 </div>
               ) : (
-                notices.map((item) => (
-                  <article key={item.id} className="notice-card">
-                    <div className="notice-card-meta">
-                      {item.authorName} · {stamp(item.createdAt)}
-                    </div>
-                    {item.title && <div className="notice-card-title">{item.title}</div>}
-                    <div className="notice-card-body">{item.body}</div>
-                    {isAdmin && (
-                      <div className="notice-card-actions">
-                        <button
-                          type="button"
-                          className="link-btn"
-                          disabled={busyId === item.id}
-                          onClick={() => remove(item.id)}
-                        >
-                          {busyId === item.id ? "删除中…" : "删除"}
-                        </button>
-                      </div>
-                    )}
-                  </article>
-                ))
+                <div className="notice-list">
+                  {notices.map((item) => {
+                    const open = expandedId === item.id;
+                    const unread = unreadIds.has(item.id);
+                    const avatar = mediaUrl(item.authorAvatarUrl);
+                    return (
+                      <article
+                        key={item.id}
+                        className={unread ? "notice-row unread" : "notice-row"}
+                        role="button"
+                        tabIndex={0}
+                        onClick={() => setExpandedId(open ? null : item.id)}
+                        onKeyDown={(event) => {
+                          if (event.key === "Enter" || event.key === " ") {
+                            event.preventDefault();
+                            setExpandedId(open ? null : item.id);
+                          }
+                        }}
+                      >
+                        <div className="notice-avatar">
+                          {avatar ? <img src={avatar} alt="" /> : item.authorName.slice(0, 1)}
+                        </div>
+                        <div className="notice-main">
+                          <div className="notice-top">
+                            <span className="notice-name">{item.authorName}</span>
+                            <span className="notice-time">
+                              {open ? stamp(item.createdAt) : listStamp(item.createdAt)}
+                            </span>
+                          </div>
+                          {open ? (
+                            <>
+                              {item.title && <div className="notice-title">{item.title}</div>}
+                              <div className="notice-full">{item.body}</div>
+                              {isAdmin && (
+                                <div className="notice-actions">
+                                  <button
+                                    type="button"
+                                    className="link-btn danger"
+                                    disabled={busyId === item.id}
+                                    onClick={(event) => {
+                                      event.stopPropagation();
+                                      remove(item.id);
+                                    }}
+                                  >
+                                    {busyId === item.id ? "删除中…" : "删除"}
+                                  </button>
+                                </div>
+                              )}
+                            </>
+                          ) : (
+                            <div className="notice-preview">
+                              {item.title && <b>{item.title}</b>}
+                              {item.title ? "　" : ""}
+                              {item.body}
+                            </div>
+                          )}
+                        </div>
+                        {unread && <span className="notice-dot" />}
+                      </article>
+                    );
+                  })}
+                </div>
               )}
             </section>
 

@@ -23,6 +23,7 @@ export type Announcement = {
   body: string;
   createdAt: string;
   authorName: string;
+  authorAvatarUrl: string | null;
 };
 
 export type AdminMember = {
@@ -69,12 +70,18 @@ export async function listAnnouncements(): Promise<Announcement[]> {
       body: row.body,
       createdAt: row.created_at,
       authorName: profile ? profile.nickname || profile.username : "管理员",
+      authorAvatarUrl: profile?.avatar_url ?? null,
     };
   });
 }
 
 function seenKey(userId: string) {
   return `notices:seen:${userId}`;
+}
+
+export function readSeenAt(userId: string): string | null {
+  if (typeof window === "undefined") return null;
+  return window.localStorage.getItem(seenKey(userId));
 }
 
 export async function unreadAnnouncementsCount(): Promise<number> {

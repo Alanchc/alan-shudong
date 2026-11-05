@@ -2469,44 +2469,129 @@ select option {
   color: var(--muted);
 }
 
-.notice-card {
-  padding: 13px 0;
-  border-top: 1px solid var(--border);
+.notice-list {
+  margin: 0 -2px;
 }
 
-.notice-card:first-of-type {
+.notice-row {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  padding: 12px 2px;
+  border-top: 1px solid var(--border);
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.notice-row:first-child {
   border-top: 0;
   padding-top: 2px;
 }
 
-.notice-card:last-of-type {
+.notice-row:last-child {
   padding-bottom: 10px;
 }
 
-.notice-card-meta {
-  margin-bottom: 4px;
+.notice-row:focus-visible {
+  outline: 2px solid var(--brand);
+  outline-offset: 2px;
+  border-radius: 8px;
+}
+
+.notice-avatar {
+  flex: none;
+  width: 42px;
+  height: 42px;
+  border-radius: 8px;
+  overflow: hidden;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 15px;
+  font-weight: 600;
+  color: #fff;
+  background: linear-gradient(135deg, #8f74ff, #6b5bd2);
+}
+
+.notice-avatar img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.notice-main {
+  flex: 1;
+  min-width: 0;
+}
+
+.notice-top {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+}
+
+.notice-name {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--text);
+}
+
+.notice-time {
+  flex: none;
+  margin-left: auto;
   font-size: 10.5px;
   color: var(--muted);
 }
 
-.notice-card-title {
-  margin-bottom: 4px;
-  font-size: 13.5px;
+.notice-preview {
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  margin-top: 3px;
+  font-size: 12.5px;
+  line-height: 1.6;
+  color: var(--muted);
+  word-break: break-word;
+}
+
+.notice-row.unread .notice-preview {
+  color: var(--text);
+}
+
+.notice-preview b {
+  font-weight: 600;
+  color: var(--text);
+}
+
+.notice-dot {
+  flex: none;
+  width: 8px;
+  height: 8px;
+  margin-top: 6px;
+  border-radius: 50%;
+  background: var(--danger);
+}
+
+.notice-title {
+  margin-top: 4px;
+  font-size: 14.5px;
   font-weight: 600;
   line-height: 1.5;
 }
 
-.notice-card-body {
-  font-size: 12.5px;
+.notice-full {
+  margin-top: 4px;
+  font-size: 13px;
   line-height: 1.75;
   white-space: pre-line;
   word-break: break-word;
 }
 
-.notice-card-actions {
+.notice-actions {
   display: flex;
   justify-content: flex-end;
-  margin-top: 6px;
+  margin-top: 8px;
 }
 
 .admin-search {
