@@ -1,3 +1,5 @@
+import { reportError } from "./report";
+
 type SupabaseLikeError = {
   message?: unknown;
   code?: unknown;
@@ -14,6 +16,8 @@ const CODE_HINTS: Record<string, string> = {
 };
 
 export function errorMessage(err: unknown, fallback: string): string {
+  reportError(err);
+
   if (err instanceof Error && err.message) return err.message;
   if (typeof err === "string" && err) return err;
 

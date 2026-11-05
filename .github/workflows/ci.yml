@@ -20,6 +20,11 @@ jobs:
       # 均为公开值（会打进前端包），配置同名 Secrets 时以 Secrets 为准
       NEXT_PUBLIC_SUPABASE_URL: ${{ secrets.NEXT_PUBLIC_SUPABASE_URL || 'https://qutgwafetrtjoxbegxhf.supabase.co' }}
       NEXT_PUBLIC_SUPABASE_ANON_KEY: ${{ secrets.NEXT_PUBLIC_SUPABASE_ANON_KEY || 'sb_publishable_5AUdIQ1a578UlsJUDdXKcw_epWsTm12' }}
+      # 未配置 Secret 时为空，Sentry 自动禁用
+      NEXT_PUBLIC_SENTRY_DSN: ${{ secrets.NEXT_PUBLIC_SENTRY_DSN }}
+      SENTRY_ORG: ${{ secrets.SENTRY_ORG }}
+      SENTRY_PROJECT: ${{ secrets.SENTRY_PROJECT }}
+      SENTRY_AUTH_TOKEN: ${{ secrets.SENTRY_AUTH_TOKEN }}
       NEXT_TELEMETRY_DISABLED: "1"
     steps:
       - name: Checkout
