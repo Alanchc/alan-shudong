@@ -8,6 +8,7 @@ type SupabaseLikeError = {
 
 const CODE_HINTS: Record<string, string> = {
   "42P01": "数据库表还没创建，请先在 Supabase SQL Editor 执行对应的 SQL 脚本",
+  "PGRST205": "数据库表还没创建，请先在 Supabase SQL Editor 执行对应的 SQL 脚本",
   "42703": "数据库缺少字段，请先执行对应的迁移脚本（如 0006_visibility.sql）",
   "42501": "没有操作权限，被 Supabase 的 RLS 策略拦截",
   "23505": "记录已存在（重复操作或用户名已被占用）",
