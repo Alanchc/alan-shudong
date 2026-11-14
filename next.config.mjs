@@ -12,6 +12,18 @@ const nextConfig = {
     if (!supabaseUrl) return [];
     return [{ source: "/sb/:path*", destination: `${supabaseUrl}/:path*` }];
   },
+  async headers() {
+    return [
+      {
+        // Service Worker 必须实时更新，不能被 CDN 长期缓存
+        source: "/sw.js",
+        headers: [
+          { key: "Cache-Control", value: "public, max-age=0, must-revalidate" },
+          { key: "Service-Worker-Allowed", value: "/" },
+        ],
+      },
+    ];
+  },
 };
 
 export default withSentryConfig(nextConfig, {
