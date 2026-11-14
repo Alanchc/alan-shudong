@@ -9,6 +9,7 @@ import { currentUserId } from "@/lib/auth";
 import { createEntry, getEntry, updateEntry } from "@/lib/entries";
 import { supabase } from "@/lib/supabase";
 import { SITE_NAME } from "@/lib/site";
+import { listDoneToday } from "@/lib/todos";
 import { MOODS, VISIBILITIES, type Mood, type Visibility } from "@/lib/types";
 import { useIsMobile } from "@/lib/useIsMobile";
 import { useSession } from "@/lib/useSession";
@@ -35,6 +36,7 @@ export default function Editor({ entryId }: { entryId: string | null }) {
   const [error, setError] = useState<string | null>(null);
   const [ready, setReady] = useState(entryId === null);
   const [uploading, setUploading] = useState(false);
+  const [insertingDone, setInsertingDone] = useState(false);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const fileRef = useRef<HTMLInputElement>(null);
   const draftKey = `diary:draft:${entryId ?? "new"}`;
@@ -180,6 +182,24 @@ export default function Editor({ entryId }: { entryId: string | null }) {
       setError(err instanceof Error ? err.message : "图片上传失败");
     } finally {
       setUploading(false);
+    }
+  }
+
+  async function insertTodayDone() {
+    setInsertingDone(true);
+    setError(null);
+    try {
+      const done = await listDoneToday();
+      if (done.length === 0) {
+        setError("今天还没有勾选完成的任务");
+        return;
+      }
+      const lines = done.map((item) => `- ${item.body}`).join("\n");
+      insertAtCursor(`\n**今日完成**\n${lines}\n`);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "读取任务清单失败");
+    } finally {
+      setInsertingDone(false);
     }
   }
 
@@ -341,6 +361,15 @@ export default function Editor({ entryId }: { entryId: string | null }) {
             </button>
             <button type="button" onClick={() => wrap("`", "`")}>
               代码
+            </button>
+            <span className="divider" />
+            <button
+              type="button"
+              onClick={insertTodayDone}
+              disabled={insertingDone}
+              style={{ opacity: insertingDone ? 0.6 : 1 }}
+            >
+              {insertingDone ? "读取中…" : "今日完成"}
             </button>
             <span className="divider" />
             <button

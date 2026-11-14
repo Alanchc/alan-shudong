@@ -192,9 +192,9 @@ export default function MePage() {
               </div>
             </div>
 
-            <Link href="/memos" className="me-row">
-              <span>备忘录</span>
-              <span className="me-label">随手记 →</span>
+            <Link href="/todos" className="me-row">
+              <span>任务清单</span>
+              <span className="me-label">今天要做什么 →</span>
             </Link>
 
             <div className="me-row">

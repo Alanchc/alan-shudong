@@ -21,14 +21,13 @@ const MODULES = [
     ),
   },
   {
-    href: "/memos",
-    name: "备忘录",
-    desc: "随手记一条，支持置顶和搜索，只有自己能看到。",
+    href: "/todos",
+    name: "任务清单",
+    desc: "今天要做什么，勾掉一条是一条。",
     icon: (
       <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6">
-        <path d="M5 4.5h14v10.5l-4.5 4.5H5z" />
-        <path d="M14.5 19.5V15H19" />
-        <path d="M8.5 9h7M8.5 12.5h4" />
+        <rect x="4" y="4" width="16" height="16" rx="2.5" />
+        <path d="M8 12l2.5 2.5L16 9" />
       </svg>
     ),
   },
