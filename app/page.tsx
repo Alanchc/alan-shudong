@@ -21,6 +21,18 @@ const MODULES = [
     ),
   },
   {
+    href: "/memos",
+    name: "备忘录",
+    desc: "随手记一条，支持置顶和搜索，只有自己能看到。",
+    icon: (
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6">
+        <path d="M5 4.5h14v10.5l-4.5 4.5H5z" />
+        <path d="M14.5 19.5V15H19" />
+        <path d="M8.5 9h7M8.5 12.5h4" />
+      </svg>
+    ),
+  },
+  {
     href: "/feed",
     name: "动态",
     desc: "看看好友最近写了什么，公开和仅好友可见的日记都会出现在这里。",
@@ -149,7 +161,7 @@ export default function PortalPage() {
             </span>
             <div className="module-body">
               <div className="module-name">更多功能</div>
-              <div className="module-desc">待办、笔记、工具……陆续加进来。</div>
+              <div className="module-desc">待办、工具箱……陆续加进来。</div>
             </div>
           </div>
         </div>

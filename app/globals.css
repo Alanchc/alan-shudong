@@ -2634,5 +2634,144 @@ select option {
   color: var(--brand);
 }
 
+/* ---------- 备忘录 ---------- */
+.memo-page {
+  min-height: 100dvh;
+  background: var(--surface-2);
+  padding: 20px 16px 90px;
+}
+
+.memo-inner {
+  max-width: 560px;
+  margin: 0 auto;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.memo-composer {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-card);
+  padding: 12px 14px;
+}
+
+.memo-input {
+  width: 100%;
+  min-height: 72px;
+  resize: vertical;
+  border: 0;
+  padding: 0;
+  background: transparent;
+  color: var(--text);
+  font-family: inherit;
+  font-size: 13.5px;
+  line-height: 1.75;
+}
+
+.memo-input:focus {
+  outline: none;
+}
+
+.memo-input::placeholder {
+  color: var(--muted);
+}
+
+.memo-composer-foot {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  font-size: 10.5px;
+  color: var(--muted);
+}
+
+.memo-composer-foot .primary-btn {
+  height: 30px;
+  padding: 0 16px;
+  font-size: 12px;
+}
+
+.memo-search {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  height: 34px;
+  padding: 0 10px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 9px;
+  color: var(--muted);
+}
+
+.memo-search input {
+  flex: 1;
+  min-width: 0;
+  border: 0;
+  background: transparent;
+  color: var(--text);
+  font-size: 13px;
+}
+
+.memo-search input:focus {
+  outline: none;
+}
+
+.memo-search input::placeholder {
+  color: var(--muted);
+}
+
+.memo-list {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.memo-item {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-card);
+  padding: 12px 14px;
+}
+
+.memo-item.pinned {
+  border-color: var(--brand);
+}
+
+.memo-body {
+  font-size: 13.5px;
+  line-height: 1.75;
+  white-space: pre-wrap;
+  word-break: break-word;
+}
+
+.memo-foot {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-top: 8px;
+  font-size: 10.5px;
+  color: var(--muted);
+}
+
+.memo-pin {
+  font-size: 10.5px;
+  color: var(--muted);
+}
+
+.memo-pin.on {
+  color: var(--brand);
+}
+
+.memo-actions {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-left: auto;
+}
+
+
 
 
